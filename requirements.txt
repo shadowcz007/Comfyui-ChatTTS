@@ -1,0 +1,7 @@
+omegaconf~=2.3.0
+
+tqdm
+einops
+vector_quantize_pytorch
+WeTextProcessing
+vocos
