@@ -75,6 +75,6 @@ class ChatTTSNode:
 
         # torchaudio.save(audio_file, torch.from_numpy(wavs[0]), 24000)
 
-        return (result,)x
+        return (result,)
     
 
