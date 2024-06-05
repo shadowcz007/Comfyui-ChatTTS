@@ -14,8 +14,10 @@ current_directory = os.path.dirname(current_file_path)
 
 print('current_directory',current_directory)
 
+# 加载python模块的目录，确认是否有当前插件的nodes路径
 print('sys.path',sys.path)
 
+# 添加当前插件的nodes路径，使ChatTTS可以被导入使用
 sys.path.append(current_directory)
 
 
