@@ -144,7 +144,7 @@ class Chat:
         params_refine_text={}, 
         params_infer_code={'prompt':'[speed_5]'}, 
         use_decoder=True,
-        do_text_normalization=False,
+        do_text_normalization=True,
         lang=None,
     ):
         

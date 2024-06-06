@@ -54,8 +54,10 @@ def run(audio_file,text):
     chat.load_models(local_path=model_local_path,compile=False) # 设置为True以获得更快速度
 
     texts = [text,]
-
-    wavs = chat.infer(texts, use_decoder=True)
+   
+    # ChatTTS使用pynini对中英文进行处理，目前在window上安装报错，需要编译环境,
+    # 暂时把do_text_normalization关掉
+    wavs = chat.infer(texts, use_decoder=True,do_text_normalization=False)
 
     torchaudio.save(audio_path, torch.from_numpy(wavs[0]), 24000)
 
