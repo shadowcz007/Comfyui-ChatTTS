@@ -6,6 +6,15 @@ import folder_paths
 
 import os
 
+
+import folder_paths
+
+# 修改模型的本地缓存地址
+# os.environ['HF_HOME'] = os.path.join(folder_paths.models_dir,'chat_tts')
+
+model_local_path=os.path.join(folder_paths.models_dir,'chat_tts')
+
+
 def run(audio_file,text):
     # 需要运行chat tts 的代码
     
@@ -19,12 +28,15 @@ def run(audio_file,text):
          _,
     ) = folder_paths.get_save_image_path('mixlab_chat_tts', output_dir)
 
+    # 添加文件名后缀
+    audio_file = f"{audio_file}_{counter:05}.wav"
+    
     audio_path=os.path.join(full_output_folder, audio_file)
 
     # from IPython.display import Audio
-    print(audio_path)
+    print('audio_path',audio_path)
     chat = ChatTTS.Chat()
-    chat.load_models(compile=False) # 设置为True以获得更快速度
+    chat.load_models(local_path=model_local_path,compile=False) # 设置为True以获得更快速度
 
     texts = [text,]
 
