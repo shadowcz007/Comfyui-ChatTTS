@@ -6,9 +6,6 @@ import folder_paths
 
 import os
 
-
-import folder_paths
-
 # 修改模型的本地缓存地址
 # os.environ['HF_HOME'] = os.path.join(folder_paths.models_dir,'chat_tts')
 
