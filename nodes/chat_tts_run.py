@@ -33,7 +33,7 @@ def run(audio_file,text):
     # from IPython.display import Audio
     print(audio_path)
     chat = ChatTTS.Chat()
-    chat.load_models(local_path=model_local_path,compile=True) # 设置为True以获得更快速度
+    chat.load_models(local_path=model_local_path,compile=False) # 设置为True以获得更快速度
 
     texts = [text,]
 
