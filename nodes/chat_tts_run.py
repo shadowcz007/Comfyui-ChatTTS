@@ -20,7 +20,7 @@ def run(audio_file,text):
     
     output_dir = folder_paths.get_output_directory()
     
-    full_output_folder, filename, counter, subfolder, filename_prefix = get_save_image_path(audio_file,
+    full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(audio_file,
                                                                                                 output_dir)
     
     # 添加文件名后缀
