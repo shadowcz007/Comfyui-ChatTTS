@@ -47,9 +47,9 @@ class ChatTTSNode:
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
     def chat_tts_run(self,text):
-
-
+        # 传入的文本
         print(text)
+
         audio_file="chat_tts"
 
         import importlib

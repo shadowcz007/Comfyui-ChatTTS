@@ -46,10 +46,17 @@ class Chat:
     def load_models(self, source='huggingface', force_redownload=False, local_path='<LOCAL_PATH>', **kwargs):
         if source == 'huggingface':
             hf_home = os.getenv('HF_HOME', os.path.expanduser("~/.cache/huggingface"))
-            try:
-                download_path = get_latest_modified_file(os.path.join(hf_home, 'hub/models--2Noise--ChatTTS/snapshots'))
-            except:
-                download_path = None
+            download_path = None
+            # 目录如果有模型，则使用
+            if os.path.exists(local_path) and os.path.exists(os.path.join(local_path, 'config', 'path.yaml')):
+                download_path=local_path
+                print('download_path',download_path)
+
+            if download_path==None:
+                try:
+                    download_path = get_latest_modified_file(os.path.join(hf_home, 'hub/models--2Noise--ChatTTS/snapshots'))
+                except:
+                    download_path = None
             if download_path is None or force_redownload: 
                 self.logger.log(logging.INFO, f'Download from HF: https://huggingface.co/2Noise/ChatTTS')
                 # 添加镜像，设置本地模型目录
