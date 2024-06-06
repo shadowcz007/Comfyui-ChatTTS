@@ -26,7 +26,7 @@ def run(audio_file,text):
         counter,
         subfolder,
          _,
-    ) = folder_paths.get_save_image_path('mixlab_chat_tts', output_dir)
+    ) = folder_paths.get_save_image_path(audio_file, output_dir)
 
     # 添加文件名后缀
     audio_file = f"{audio_file}_{counter:05}.wav"
