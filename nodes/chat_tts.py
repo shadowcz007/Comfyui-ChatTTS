@@ -50,7 +50,7 @@ class ChatTTSNode:
         # 传入的文本
         print(text)
 
-        audio_file="chat_tts_"
+        audio_file="chat_tts"
 
         import importlib
         # 模块名称
