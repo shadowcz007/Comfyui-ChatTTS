@@ -50,7 +50,7 @@ class ChatTTSNode:
 
 
         print(text)
-        audio_file="test.wav"
+        audio_file="chat_tts"
 
         import importlib
         # 模块名称

@@ -28,6 +28,9 @@ def run(audio_file,text):
          _,
     ) = folder_paths.get_save_image_path('mixlab_chat_tts', output_dir)
 
+    # 添加文件名后缀
+    audio_file = f"{audio_file}_{counter:05}.wav"
+    
     audio_path=os.path.join(full_output_folder, audio_file)
 
     # from IPython.display import Audio
