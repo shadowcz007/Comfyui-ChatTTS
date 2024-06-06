@@ -20,21 +20,16 @@ def run(audio_file,text):
     
     output_dir = folder_paths.get_output_directory()
     
-    (
-        full_output_folder,
-        filename,
-        counter,
-        subfolder,
-         _,
-    ) = folder_paths.get_save_image_path(audio_file, output_dir)
-
+    full_output_folder, filename, counter, subfolder, filename_prefix = get_save_image_path(audio_file,
+                                                                                                output_dir)
+    
     # 添加文件名后缀
     audio_file = f"{audio_file}_{counter:05}.wav"
     
-    audio_path=os.path.join(full_output_folder, audio_file)
+    audio_path=os.path.join(output_dir, audio_file)
 
     # from IPython.display import Audio
-    print('audio_path',audio_path)
+    print('#audio_path',audio_path)
     chat = ChatTTS.Chat()
     chat.load_models(local_path=model_local_path,compile=False) # 设置为True以获得更快速度
 
