@@ -6,6 +6,15 @@ import folder_paths
 
 import os
 
+
+import folder_paths
+
+# 修改模型的本地缓存地址
+# os.environ['HF_HOME'] = os.path.join(folder_paths.models_dir,'chat_tts')
+
+model_local_path=os.path.join(folder_paths.models_dir,'chat_tts')
+
+
 def run(audio_file,text):
     # 需要运行chat tts 的代码
     
@@ -24,7 +33,7 @@ def run(audio_file,text):
     # from IPython.display import Audio
     print(audio_path)
     chat = ChatTTS.Chat()
-    chat.load_models(compile=False) # 设置为True以获得更快速度
+    chat.load_models(local_path=model_local_path,compile=True) # 设置为True以获得更快速度
 
     texts = [text,]
 

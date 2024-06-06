@@ -52,7 +52,13 @@ class Chat:
                 download_path = None
             if download_path is None or force_redownload: 
                 self.logger.log(logging.INFO, f'Download from HF: https://huggingface.co/2Noise/ChatTTS')
-                download_path = snapshot_download(repo_id="2Noise/ChatTTS", allow_patterns=["*.pt", "*.yaml"])
+                # 添加镜像，设置本地模型目录
+                download_path = snapshot_download(
+                    repo_id="2Noise/ChatTTS", 
+                    allow_patterns=["*.pt", "*.yaml"],
+                    local_dir=local_path,
+                    endpoint='https://hf-mirror.com'
+                    )                
             else:
                 self.logger.log(logging.INFO, f'Load from cache: {download_path}')
         elif source == 'local':

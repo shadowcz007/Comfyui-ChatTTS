@@ -21,8 +21,6 @@ print('sys.path',sys.path)
 sys.path.append(current_directory)
 
 
-
-
 # 需要了解python的class是什么意思
 class ChatTTSNode:
     @classmethod
