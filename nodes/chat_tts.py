@@ -14,11 +14,11 @@ current_directory = os.path.dirname(current_file_path)
 
 print('current_directory',current_directory)
 
+# 加载python模块的目录，确认是否有当前插件的nodes路径
 print('sys.path',sys.path)
 
+# 添加当前插件的nodes路径，使ChatTTS可以被导入使用
 sys.path.append(current_directory)
-
-
 
 
 # 需要了解python的class是什么意思
@@ -36,8 +36,8 @@ class ChatTTSNode:
                         }
                 }
     
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("audio_file",)
+    RETURN_TYPES = ("AUDIO",)
+    RETURN_NAMES = ("audio",)
 
     FUNCTION = "chat_tts_run"
 
@@ -47,10 +47,10 @@ class ChatTTSNode:
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
     def chat_tts_run(self,text):
-
-
+        # 传入的文本
         print(text)
-        audio_file="test.wav"
+
+        audio_file="chat_tts"
 
         import importlib
         # 模块名称
