@@ -61,9 +61,4 @@ def run(audio_file,text):
 
     torchaudio.save(audio_path, torch.from_numpy(wavs[0]), 24000)
 
-    return {
-                "filename": audio_file,
-                "subfolder": "",
-                "type": "output",
-                "prompt":text
-                }
+    return audio_path

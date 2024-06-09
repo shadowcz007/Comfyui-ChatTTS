@@ -36,7 +36,7 @@ class ChatTTSNode:
                         }
                 }
     
-    RETURN_TYPES = ("AUDIO",)
+    RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("audio",)
 
     FUNCTION = "chat_tts_run"
