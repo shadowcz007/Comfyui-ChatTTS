@@ -84,5 +84,111 @@ class ChatTTSNode:
         # torchaudio.save(audio_file, torch.from_numpy(wavs[0]), 24000)
 
         return (result,)
-    
 
+
+import re
+
+def extract_speech(content):
+    # 定义正则表达式来捕获人名和讲话内容，使用非贪婪匹配
+    pattern = re.compile(r'(\w+)：\[uv_break\](.*?)(?=\[uv_break\]|\Z)', re.DOTALL)
+    
+    # 查找所有匹配的内容
+    matches = pattern.findall(content)
+    
+    # 构建结果列表
+    result = []
+    for index, (name, text) in enumerate(matches):
+        result.append({
+            'name': name.strip(),
+            'text': text.strip(),
+            'index': index
+        })
+    
+    return result
+
+# 测试内容
+# content = '''
+#  [laugh][uv_break]小明：[uv_break]大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧！[uv_break]
+
+# 小李：[uv_break]大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。[uv_break]
+
+# 小王：[uv_break]大家好，我是小王，也很期待今天的讨论。[uv_break]
+# [uv_break]
+# '''
+
+# # 调用方法并打印结果
+# speech_list = extract_speech(content)
+# for speech in speech_list:
+#     print(speech)
+
+
+
+
+
+# 生产多角色的播客节目
+class multiPersonPodcast:
+    def __init__(self):
+        self.speaker={}
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                        "text":  ("STRING", 
+                                     {
+                                       "default": '''
+ [laugh][uv_break]小明：[uv_break]大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧！[uv_break]
+
+小李：[uv_break]大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。[uv_break]
+
+小王：[uv_break]大家好，我是小王，也很期待今天的讨论。[uv_break]
+[uv_break]
+'''.strip(), 
+                                       "multiline": True,
+                                       "dynamicPrompts": True # comfyui 动态提示
+                                       }
+                                    ),
+                        }
+                }
+    
+    RETURN_TYPES = ("AUDIO",)
+    RETURN_NAMES = ("audio",)
+
+    FUNCTION = "chat_tts_run"
+
+    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+  
+    def chat_tts_run(self,text):
+        
+        speech_list = extract_speech(text)
+
+        print(speech_list)
+
+        self.speaker = {}
+        for speech in speech_list:
+            self.speaker[speech['name']] = None
+             
+        import importlib
+        # 模块名称
+        module_name = 'chat_tts_run'
+
+        # 动态加载模块
+        module = importlib.import_module(module_name)
+
+        podcast=[]
+       
+        for speech in speech_list:
+            audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
+            spk=self.speaker[speech['name']]
+
+            result,rand_spk=module.run(audio_file,speech['text'],spk)
+
+            self.speaker[speech['name']]=rand_spk
+
+            result={**speech, **result}
+
+            podcast.append(result)
+
+        return (podcast,)
+    
