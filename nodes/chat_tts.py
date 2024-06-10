@@ -23,16 +23,19 @@ sys.path.append(current_directory)
 
 # 需要了解python的class是什么意思
 class ChatTTSNode:
+    def __init__(self):
+        self.speaker = None
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
                         "text":  ("STRING", 
                                      {
-                                       "default": "大家好，我是shadow", 
+                                       "default": "[laugh][uv_break]大家好，我是shadow [uv_break]", 
                                        "multiline": True,
                                        "dynamicPrompts": True # comfyui 动态提示
                                        }
                                     ),
+                        "random_speaker":("BOOLEAN", {"default": False},), # 是否需要随机发音人
                         }
                 }
     
@@ -46,7 +49,7 @@ class ChatTTSNode:
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
-    def chat_tts_run(self,text):
+    def chat_tts_run(self,text,random_speaker):
         # 传入的文本
         print(text)
 
@@ -58,10 +61,15 @@ class ChatTTSNode:
 
         # 动态加载模块
         module = importlib.import_module(module_name)
+        
+        if random_speaker:
+            self.speaker=None
 
         # 使用加载的模块
-        result=module.run(audio_file,text)
+        result,rand_spk=module.run(audio_file,text,self.speaker)
 
+        self.speaker=rand_spk
+        
         # # 需要运行chat tts 的代码
         # import ChatTTS
         # from IPython.display import Audio

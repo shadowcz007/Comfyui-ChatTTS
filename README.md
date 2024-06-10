@@ -8,3 +8,9 @@
 python 运行时（后端）- 后端python怎么写
 GUI - 怎么修改节点界面
 
+
+
+
+TODO:
+中英文处理
+https://github.com/jianchang512/ChatTTS-ui/blob/main/uilib/utils.py

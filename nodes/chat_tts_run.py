@@ -36,7 +36,7 @@ def get_new_counter(full_output_folder, filename_prefix):
     return max_number + 1
 
 
-def run(audio_file,text):
+def run(audio_file,text,rand_spk):
     # 需要运行chat tts 的代码
     
     output_dir = folder_paths.get_output_directory()
@@ -54,16 +54,31 @@ def run(audio_file,text):
     chat.load_models(local_path=model_local_path,compile=False) # 设置为True以获得更快速度
 
     texts = [text,]
+
+    params_refine_text = {
+        'prompt': '[oral_2][laugh_0][break_4]'
+    } 
+
+    if rand_spk is None:
+        rand_spk = chat.sample_random_speaker()
+
+    params_infer_code = {
+    'spk_emb': rand_spk, # add sampled speaker 
+    'temperature': .3, # using custom temperature
+    'top_P': 0.7, # top P decode
+    'top_K': 20, # top K decode
+    }
+
    
     # ChatTTS使用pynini对中英文进行处理，目前在window上安装报错，需要编译环境,
     # 暂时把do_text_normalization关掉
-    wavs = chat.infer(texts, use_decoder=True,do_text_normalization=False)
+    wavs = chat.infer(texts, use_decoder=True,do_text_normalization=False,params_refine_text=params_refine_text,params_infer_code=params_infer_code)
 
     torchaudio.save(audio_path, torch.from_numpy(wavs[0]), 24000)
 
-    return {
+    return ({
                 "filename": audio_file,
                 "subfolder": "",
                 "type": "output",
                 "prompt":text
-                }
+                },rand_spk)
