@@ -49,7 +49,7 @@ def run(audio_file,text,rand_spk):
     audio_path=os.path.join(output_dir, audio_file)
 
     # from IPython.display import Audio
-    print('#audio_path',audio_path)
+    # print('#audio_path',audio_path)
     chat = ChatTTS.Chat()
     chat.load_models(local_path=model_local_path,compile=False) # 设置为True以获得更快速度
 
@@ -80,5 +80,6 @@ def run(audio_file,text,rand_spk):
                 "filename": audio_file,
                 "subfolder": "",
                 "type": "output",
-                "prompt":text
+                "prompt":text,
+                "audio_path":audio_path
                 },rand_spk)
