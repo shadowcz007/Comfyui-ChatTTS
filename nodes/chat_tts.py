@@ -110,18 +110,18 @@ def extract_speech(content):
     
     return result
 
-# 测试内容
-content = '''
- [laugh][uv_break]小明：[uv_break]大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧
-小李：[uv_break]大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。
-小王：[uv_break]大家好，我是小王，也很期待今天的讨论。
-[uv_break]
-'''
+# # 测试内容
+# content = '''
+#  [laugh][uv_break]小明：[uv_break]大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧
+# 小李：[uv_break]大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。
+# 小王：[uv_break]大家好，我是小王，也很期待今天的讨论。
+# [uv_break]
+# '''
 
-# 调用方法并打印结果
-speech_list = extract_speech(content)
-for speech in speech_list:
-    print(speech)
+# # 调用方法并打印结果
+# speech_list = extract_speech(content)
+# for speech in speech_list:
+#     print(speech)
 
 
 
