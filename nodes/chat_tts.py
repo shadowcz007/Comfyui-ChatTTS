@@ -48,7 +48,7 @@ class ChatTTSNode:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab/Audio"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
