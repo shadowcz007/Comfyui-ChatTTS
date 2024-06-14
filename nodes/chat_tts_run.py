@@ -9,7 +9,13 @@ import os
 # 修改模型的本地缓存地址
 # os.environ['HF_HOME'] = os.path.join(folder_paths.models_dir,'chat_tts')
 
-model_local_path=os.path.join(folder_paths.models_dir,'chat_tts')
+def get_model_dir(m):
+    try:
+        return folder_paths.get_folder_paths(m)[0]
+    except:
+        return os.path.join(folder_paths.models_dir, m)
+
+model_local_path=get_model_dir('chat_tts')
 
 # 写一个python文件，用来 判断文件夹内命名为 所有chat_tts开头的文件数量（chat_tts_00001），并输出新的编号
 def get_new_counter(full_output_folder, filename_prefix):
