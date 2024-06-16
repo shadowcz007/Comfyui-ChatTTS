@@ -171,6 +171,13 @@ app.registerExtension({
 
         //添加控件到节点里
         this.addCustomWidget(widget)
+
+        const onRemoved = this.onRemoved
+        this.onRemoved = () => {
+          widget.div.remove()
+          return onRemoved?.()
+        }
+        
       }
     }
 
