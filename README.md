@@ -8,7 +8,7 @@
 python 运行时（后端）- 后端python怎么写
 GUI - 怎么修改节点界面
 
-
+![alt text](1718510061089.png)
 
 
 TODO:
