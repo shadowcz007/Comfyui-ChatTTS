@@ -194,15 +194,44 @@ class multiPersonPodcast:
                         "text":  ("STRING", 
                                      {
                                        "default": '''
- [laugh][uv_break]小明：[uv_break]大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧！
-小李：[uv_break]大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。
-小王：[uv_break]大家好，我是小王，也很期待今天的讨论。
-[uv_break]
-'''.strip(), 
+                                            [laugh][uv_break]小明：[uv_break]大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧！
+                                            小李：[uv_break]大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。
+                                            小王：[uv_break]大家好，我是小王，也很期待今天的讨论。
+                                            [uv_break]
+                                            '''.strip(), 
                                        "multiline": True,
                                        "dynamicPrompts": True # comfyui 动态提示
                                        }
                                     ),
+                        
+                        "uv_speed": ("INT",{
+                                "default":0, 
+                                "min": 0, #Minimum value
+                                "max": 9, #Maximum value
+                                "step": 1, #Slider's step
+                                "display": "slider" # Cosmetic only: display as "number" or "slider"
+                            }),
+                        "uv_oral": ("INT",{
+                                "default":0, 
+                                "min": 0, #Minimum value
+                                "max": 9, #Maximum value
+                                "step": 1, #Slider's step
+                                "display": "slider" # Cosmetic only: display as "number" or "slider"
+                            }),
+                        "uv_laugh": ("INT",{
+                                "default":0, 
+                                "min": 0, #Minimum value
+                                "max": 9, #Maximum value
+                                "step": 1, #Slider's step
+                                "display": "slider" # Cosmetic only: display as "number" or "slider"
+                            }),
+                        "uv_break": ("INT",{
+                                "default":0, 
+                                "min": 0, #Minimum value
+                                "max": 9, #Maximum value
+                                "step": 1, #Slider's step
+                                "display": "slider" # Cosmetic only: display as "number" or "slider"
+                            }), 
                         }
                 }
     
@@ -216,7 +245,7 @@ class multiPersonPodcast:
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
   
-    def chat_tts_run(self,text):
+    def chat_tts_run(self,text,uv_speed,uv_oral,uv_laugh,uv_break):
         
         speech_list = extract_speech(text)
 
@@ -242,7 +271,7 @@ class multiPersonPodcast:
             audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
             spk=self.speaker[speech['name']]
 
-            result,rand_spk=module.run(audio_file,speech['text'],spk)
+            result,rand_spk=module.run(audio_file,speech['text'],spk,uv_speed,uv_oral,uv_laugh,uv_break)
 
             self.speaker[speech['name']]=rand_spk
 
