@@ -74,8 +74,8 @@ def run(audio_file,text,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_bre
     if uv_break:
         params_refine_text['prompt']+=f'[break_{uv_break}]'
     
-    if uv_speed:
-        params_refine_text['prompt']+=f'[speed_{uv_speed}]'
+    # if uv_speed:
+    #     params_refine_text['prompt']+=f'[speed_{uv_speed}]'
 
     if rand_spk is None:
         rand_spk = chat.sample_random_speaker()
