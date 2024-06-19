@@ -79,12 +79,14 @@ def run(audio_file,text,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_bre
 
     if rand_spk is None:
         rand_spk = chat.sample_random_speaker()
+    
+    print('params_refine_text',params_refine_text,texts)
 
     params_infer_code = {
-    'spk_emb': rand_spk, # add sampled speaker 
-    'temperature': .3, # using custom temperature
-    'top_P': 0.7, # top P decode
-    'top_K': 20, # top K decode
+        'spk_emb': rand_spk, # add sampled speaker 
+        'temperature': .3, # using custom temperature
+        'top_P': 0.7, # top P decode
+        'top_K': 20, # top K decode
     }
 
    

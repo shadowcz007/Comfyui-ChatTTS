@@ -438,7 +438,7 @@ class multiPersonPodcast:
         
         speech_list = extract_speech(text)
 
-        print('speaker',speaker,speech_list)
+        print(speech_list)
 
         if speaker!=None:
             # 有传入speaker
