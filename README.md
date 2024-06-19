@@ -13,6 +13,8 @@ Multi Person Podcast
 
 CreateSpeakers
 
+SaveSpeaker 、LoadSpeaker : 方便保存和加载音色
+
 
 
 模型：

@@ -115,7 +115,7 @@ def extract_speech(content):
     result = []
     for index, (name,_, text) in enumerate(matches):
         result.append({
-            'name': name.strip(),
+            'name': name.strip().lower(),
             'text': remove_brackets(text).strip(),
             'index': index
         })
@@ -220,6 +220,7 @@ class CreateSpeakers:
     def __init__(self):
         self.speaker=None
         self.seed=None
+        self.last_result=None
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
@@ -275,16 +276,18 @@ class CreateSpeakers:
             if count>0:
                 is_new=True
             print('#count',count)
-        
 
+        if self.last_result==None:
+            is_new==True
+        
         if is_new==False and self.last_result and self.speaker:
             return (self.last_result ,self.speaker)
-        
+        # elif self.last_result==None and is_new==False and self.speaker:
 
         self.speaker = {}
         for speech in speech_list:
             self.speaker[speech['name']] = None
-             
+
         import importlib
         # 模块名称
         module_name = 'chat_tts_run'
@@ -316,59 +319,117 @@ class CreateSpeakers:
         self.last_result = merge_audio_files(audio_paths)
 
         return (self.last_result ,self.speaker)
-    
+
+
+def get_speaker_model_path():
+    try:
+        return folder_paths.get_folder_paths('chat_tts_speaker')[0]
+    except:
+        return os.path.join(folder_paths.models_dir, "chat_tts_speaker")
+
+
+def get_files_with_extension(directory, extension):
+    file_list = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(extension):
+                file = os.path.splitext(file)[0]
+                file_path = os.path.join(root, file)
+                file_name = os.path.relpath(file_path, directory)
+                file_list.append(file_name)
+    return file_list
+
+
 #todo 保存音色文件，加载音色
-# class LoadSpeaker:
-#     def __init__(self):
-#         self.speaker=None
-#         self.seed=None
-#     @classmethod
-#     def INPUT_TYPES(s):
-#         return {"required": {
-                         
-#                         }
-#                 }
+class LoadSpeaker:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                        "model":(get_files_with_extension(get_speaker_model_path(),'.pt'),),
+                        }
+                }
     
-#     RETURN_TYPES = ("SPEAKER",)
-#     RETURN_NAMES = ("speaker",)
+    RETURN_TYPES = ("SPEAKER",)
+    RETURN_NAMES = ("speaker",)
 
-#     FUNCTION = "chat_tts_run"
+    FUNCTION = "run"
 
-#     CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab_Test_ChatTTS"
 
-#     INPUT_IS_LIST = False
-#     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+    INPUT_IS_LIST = False
+    OUTPUT_NODE = True
+    OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
-#     def chat_tts_run(self,seed):
-#         self.speaker=seed
+    def run(self,model):
 
-#         return (self.speaker)
+        model = model+'.pt'
 
-# class SaveSpeaker:
-#     def __init__(self):
-#         self.speaker=None
-#         self.seed=None
-#     @classmethod
-#     def INPUT_TYPES(s):
-#         return {"required": {
-                         
-#                         }
-#                 }
+        model_path=os.path.join(get_speaker_model_path(),model)
+
+
+        self.speaker={}
+
+        for k,v in torch.load(model_path).items():
+            self.speaker[k.lower()]=v
+
+        return {"ui": {"text": self.speaker.keys()}, "result": (self.speaker,)}
+
+
+
+class SaveSpeaker:
+    def __init__(self):
+        self.speaker=None
+        
+        # 模型位置
+        self.model_path=get_speaker_model_path()
+        if not os.path.exists(self.model_path):
+            # 如果目录不存在，则创建它
+            os.makedirs(self.model_path)
+
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                         "speaker": ("SPEAKER", {"forceInput": True}), 
+                         "filename_prefix":("STRING", {"multiline": False,"default": "mixlab_tts"})
+                        }
+                }
     
-#     RETURN_TYPES = ("SPEAKER",)
-#     RETURN_NAMES = ("speaker",)
+    RETURN_TYPES = ("SPEAKER_FILE",)
+    RETURN_NAMES = ("speaker_file",)
 
-#     FUNCTION = "chat_tts_run"
+    FUNCTION = "chat_tts_run"
 
-#     CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab_Test_ChatTTS"
 
-#     INPUT_IS_LIST = False
-#     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
-#     def chat_tts_run(self,seed):
-#         self.speaker=seed
+    def chat_tts_run(self,speaker,filename_prefix):
+        self.speaker=speaker
 
-#         return (self.speaker)
+        # output_dir = folder_paths.get_output_directory()
+
+        (
+            full_output_folder,
+            filename,
+            counter,
+            subfolder,
+            _,
+        ) = folder_paths.get_save_image_path(filename_prefix, self.model_path)
+
+        file = f"{filename}_{counter:05}.pt"
+
+        f_path=os.path.join(full_output_folder, file)
+
+        # 保存张量
+        torch.save(speaker, f_path)
+
+        return ({
+                "filename": file,
+                "subfolder": "chat_tts_speaker",
+                "type":"model"
+            },)
     
 
 
@@ -466,7 +527,7 @@ class multiPersonPodcast:
         for speech in speech_list:
             audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
             spk=self.speaker[speech['name']]
-
+            print('#speaker',speech['name'],not (spk is None))
             result,rand_spk=module.run(audio_file,speech['text'],spk,uv_speed,uv_oral,uv_laugh,uv_break)
 
             self.speaker[speech['name']]=rand_spk
