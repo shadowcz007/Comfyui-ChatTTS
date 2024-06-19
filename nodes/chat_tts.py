@@ -110,7 +110,7 @@ def extract_speech(content):
 
     # 查找所有匹配的内容
     matches = pattern.findall(content)
-    print(matches)
+    # print(matches)
     # 构建结果列表
     result = []
     for index, (name,_, text) in enumerate(matches):
@@ -215,6 +215,163 @@ def merge_audio_files(file_list):
 
 
 
+# 生产多角色的语音，可以先听下音色
+class CreateSpeakers:
+    def __init__(self):
+        self.speaker=None
+        self.seed=None
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                        "text":  ("STRING", 
+                                     {
+                                       "default":'''小明：大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧！
+                                       小李：大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。
+                                       小王：大家好，我是小王，也很期待今天的讨论。
+                                            '''.strip(), 
+                                       "multiline": True,
+                                       "dynamicPrompts": True # comfyui 动态提示
+                                       }
+                                    ),
+                        
+                        "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}), #默认的seed控件
+                      
+                        }
+                }
+    
+    RETURN_TYPES = ("AUDIO","SPEAKER",)
+    RETURN_NAMES = ("audio","speaker",)
+
+    FUNCTION = "chat_tts_run"
+
+    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
+  
+    def chat_tts_run(self,text,seed):
+        
+        speech_list = extract_speech(text)
+
+        print('seed',seed,speech_list)
+
+        is_new=False
+
+        if self.seed==None:
+            self.seed=seed
+            is_new=True
+        elif self.seed!=seed:
+            self.seed=seed
+            is_new=True
+
+        if self.speaker==None:
+            self.seed=seed
+            is_new=True
+        else:
+            count=len(self.speaker.keys())
+            for speech in speech_list:
+                if speech['name'] in  self.speaker:
+                    count-=1
+            if count>0:
+                is_new=True
+            print('#count',count)
+        
+
+        if is_new==False and self.last_result and self.speaker:
+            return (self.last_result ,self.speaker)
+        
+
+        self.speaker = {}
+        for speech in speech_list:
+            self.speaker[speech['name']] = None
+             
+        import importlib
+        # 模块名称
+        module_name = 'chat_tts_run'
+
+        # 动态加载模块
+        module = importlib.import_module(module_name)
+
+        audio_paths=[]
+       
+        pbar = comfy.utils.ProgressBar(len(speech_list))
+
+        for name in self.speaker.keys():
+            audio_file="chat_tts_"+name+"_"
+            spk=self.speaker[name]
+
+            result,rand_spk=module.run(audio_file,
+                                       f'Hello 我是{name},你好，欢迎来到mixlab无界社区',
+                                       spk,
+                                       None,None,None,
+                                       3)
+
+            self.speaker[name]=rand_spk
+
+            result={**speech, **result}
+ 
+            audio_paths.append(result['audio_path'])
+            pbar.update(1)
+
+        self.last_result = merge_audio_files(audio_paths)
+
+        return (self.last_result ,self.speaker)
+    
+#todo 保存音色文件，加载音色
+# class LoadSpeaker:
+#     def __init__(self):
+#         self.speaker=None
+#         self.seed=None
+#     @classmethod
+#     def INPUT_TYPES(s):
+#         return {"required": {
+                         
+#                         }
+#                 }
+    
+#     RETURN_TYPES = ("SPEAKER",)
+#     RETURN_NAMES = ("speaker",)
+
+#     FUNCTION = "chat_tts_run"
+
+#     CATEGORY = "♾️Mixlab_Test_ChatTTS"
+
+#     INPUT_IS_LIST = False
+#     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+  
+#     def chat_tts_run(self,seed):
+#         self.speaker=seed
+
+#         return (self.speaker)
+
+# class SaveSpeaker:
+#     def __init__(self):
+#         self.speaker=None
+#         self.seed=None
+#     @classmethod
+#     def INPUT_TYPES(s):
+#         return {"required": {
+                         
+#                         }
+#                 }
+    
+#     RETURN_TYPES = ("SPEAKER",)
+#     RETURN_NAMES = ("speaker",)
+
+#     FUNCTION = "chat_tts_run"
+
+#     CATEGORY = "♾️Mixlab_Test_ChatTTS"
+
+#     INPUT_IS_LIST = False
+#     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+  
+#     def chat_tts_run(self,seed):
+#         self.speaker=seed
+
+#         return (self.speaker)
+    
+
+
 # 生产多角色的播客节目
 class multiPersonPodcast:
     def __init__(self):
@@ -224,9 +381,9 @@ class multiPersonPodcast:
         return {"required": {
                         "text":  ("STRING", 
                                      {
-                                       "default":'''[laugh][uv_break]小明：[uv_break]大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧！
-                                       小李：[uv_break]大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。
-                                       小王：[uv_break]大家好，我是小王，也很期待今天的讨论。[uv_break]
+                                       "default":'''小明：大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧！
+                                       小李：大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。
+                                       小王：大家好，我是小王，也很期待今天的讨论。
                                             '''.strip(), 
                                        "multiline": True,
                                        "dynamicPrompts": True # comfyui 动态提示
@@ -261,6 +418,9 @@ class multiPersonPodcast:
                                 "step": 1, #Slider's step
                                 "display": "slider" # Cosmetic only: display as "number" or "slider"
                             }), 
+                        },
+                         "optional":{ 
+                                "speaker": ("SPEAKER", {"forceInput": True}), 
                         }
                 }
     
@@ -274,15 +434,22 @@ class multiPersonPodcast:
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
   
-    def chat_tts_run(self,text,uv_speed,uv_oral,uv_laugh,uv_break):
+    def chat_tts_run(self,text,uv_speed,uv_oral,uv_laugh,uv_break,speaker=None):
         
         speech_list = extract_speech(text)
 
-        print(speech_list)
+        print('speaker',speaker,speech_list)
 
-        self.speaker = {}
-        for speech in speech_list:
-            self.speaker[speech['name']] = None
+        if speaker!=None:
+            # 有传入speaker
+            self.speaker = speaker
+            for speech in speech_list:
+                if not speech['name'] in self.speaker:
+                    self.speaker[speech['name']] = None
+        else:
+            self.speaker = {}
+            for speech in speech_list:
+                self.speaker[speech['name']] = None
              
         import importlib
         # 模块名称

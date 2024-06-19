@@ -1,8 +1,9 @@
-from .nodes.chat_tts import ChatTTSNode,multiPersonPodcast
+from .nodes.chat_tts import ChatTTSNode,multiPersonPodcast,CreateSpeakers
 
 
 NODE_CLASS_MAPPINGS = {
     "ChatTTS_": ChatTTSNode,
+    "CreateSpeakers":CreateSpeakers,
     "MultiPersonPodcast":multiPersonPodcast
 }
 
@@ -10,5 +11,6 @@ NODE_CLASS_MAPPINGS = {
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ChatTTS_": "ChatTTS",
-    "MultiPersonPodcast":"Multi Person Podcast"
+    "MultiPersonPodcast":"Multi Person Podcast",
+    "CreateSpeakers":"Create Speakers",
 }

@@ -42,7 +42,7 @@ def get_new_counter(full_output_folder, filename_prefix):
     return max_number + 1
 
 
-def run(audio_file,text,rand_spk,uv_speed,uv_oral,uv_laugh,uv_break):
+def run(audio_file,text,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_break=None):
     # 需要运行chat tts 的代码
     
     output_dir = folder_paths.get_output_directory()
@@ -62,8 +62,20 @@ def run(audio_file,text,rand_spk,uv_speed,uv_oral,uv_laugh,uv_break):
     texts = [text,]
 
     params_refine_text = {
-        'prompt': f'[oral_{uv_oral}][laugh_{uv_laugh}][break_{uv_break}]'
+        'prompt': f''
     } 
+
+    if uv_oral:
+        params_refine_text['prompt']+=f'[oral_{uv_oral}]'
+
+    if uv_laugh:
+        params_refine_text['prompt']+=f'[laugh_{uv_laugh}]'
+    
+    if uv_break:
+        params_refine_text['prompt']+=f'[break_{uv_break}]'
+    
+    if uv_speed:
+        params_refine_text['prompt']+=f'[speed_{uv_speed}]'
 
     if rand_spk is None:
         rand_spk = chat.sample_random_speaker()
