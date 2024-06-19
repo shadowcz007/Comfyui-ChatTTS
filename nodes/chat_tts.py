@@ -403,6 +403,7 @@ class SaveSpeaker:
     CATEGORY = "♾️Mixlab_Test_ChatTTS"
 
     INPUT_IS_LIST = False
+    OUTPUT_NODE = True
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
     def chat_tts_run(self,speaker,filename_prefix):
