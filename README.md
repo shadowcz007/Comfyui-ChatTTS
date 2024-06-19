@@ -5,6 +5,11 @@
 目前可以创建音色，复用音色，支持多人对话模式的生成，寻求帮助可以加入[discord](https://discord.gg/cXs9vZSqeK)
 
 
+> 案例 
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/s6O9aKrr3pM?si=--mwIX1rR0axEQFn" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+
 节点：
 
 ChatTTS
