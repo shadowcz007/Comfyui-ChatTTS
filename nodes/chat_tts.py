@@ -432,6 +432,67 @@ class SaveSpeaker:
                 "type":"model"
             },)
     
+class MergeSpeaker:
+    def __init__(self):
+        self.speaker=None
+       
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                         "speaker1": ("SPEAKER", {"forceInput": True}), 
+                         "speaker2": ("SPEAKER", {"forceInput": True}), 
+                        }
+                }
+    
+    RETURN_TYPES = ("SPEAKER",)
+    RETURN_NAMES = ("speakers",)
+
+    FUNCTION = "chat_tts_run"
+
+    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+
+    INPUT_IS_LIST = False
+    OUTPUT_NODE = True
+    OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+  
+    def chat_tts_run(self,speaker1,speaker2):
+        speaker1.update(speaker2)
+
+        self.speaker=speaker1
+
+        return (self.speaker,)
+    
+class RenameSpeaker:
+    def __init__(self):
+        self.speaker=None
+       
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                         "speaker": ("SPEAKER", {"forceInput": True}), 
+                         "name":("STRING", {"multiline": False,"default": "mixlab"})
+                        }
+                }
+    
+    RETURN_TYPES = ("SPEAKER",)
+    RETURN_NAMES = ("speaker",)
+
+    FUNCTION = "chat_tts_run"
+
+    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+
+    INPUT_IS_LIST = False
+    OUTPUT_NODE = True
+    OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+  
+    def chat_tts_run(self,speaker,name):
+         
+        self.speaker={}
+
+        self.speaker[name]= list(speaker.values())[0]
+
+        return (self.speaker,)
+    
 
 
 # 生产多角色的播客节目
