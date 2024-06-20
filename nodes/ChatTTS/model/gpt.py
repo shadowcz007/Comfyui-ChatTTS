@@ -167,6 +167,7 @@ class GPT_warpper(nn.Module):
         infer_text=False,
         return_attn=False,
         return_hidden=False,
+        progress_callback=None,  # 添加进度回调参数
     ):
         
         with torch.no_grad():   
@@ -247,6 +248,12 @@ class GPT_warpper(nn.Module):
             
                 if finish.all():
                     break
+
+                # 调用进度回调函数
+                if progress_callback is not None:
+                    progress_callback(i + 1, max_new_token)
+
+                    
             
             inputs_ids = [inputs_ids[idx, start_idx: start_idx+i] for idx, i in enumerate(end_idx.int())]
             inputs_ids = [i[:, 0] for i in inputs_ids] if infer_text else inputs_ids

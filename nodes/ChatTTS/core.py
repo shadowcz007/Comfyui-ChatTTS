@@ -146,6 +146,7 @@ class Chat:
         use_decoder=True,
         do_text_normalization=True,
         lang=None,
+        progress_callback=None
     ):
         
         assert self.check_model(use_decoder=use_decoder)
@@ -176,7 +177,7 @@ class Chat:
             
         text = [params_infer_code.get('prompt', '') + i for i in text]
         params_infer_code.pop('prompt', '')
-        result = infer_code(self.pretrain_models, text, **params_infer_code, return_hidden=use_decoder)
+        result = infer_code(self.pretrain_models, text, **params_infer_code, return_hidden=use_decoder,progress_callback=progress_callback)
         
         if use_decoder:
             mel_spec = [self.pretrain_models['decoder'](i[None].permute(0,2,1)) for i in result['hiddens']]

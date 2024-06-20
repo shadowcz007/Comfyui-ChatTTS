@@ -42,7 +42,7 @@ def get_new_counter(full_output_folder, filename_prefix):
     return max_number + 1
 
 
-def run(audio_file,text,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_break=None):
+def run(audio_file,texts,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_break=None,progress_callback=None):
     # 需要运行chat tts 的代码
     
     output_dir = folder_paths.get_output_directory()
@@ -59,7 +59,7 @@ def run(audio_file,text,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_bre
     chat = ChatTTS.Chat()
     chat.load_models(local_path=model_local_path,compile=False) # 设置为True以获得更快速度
 
-    texts = [text,]
+    # texts = [text,]
 
     params_refine_text = {
         'prompt': f''
@@ -74,8 +74,8 @@ def run(audio_file,text,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_bre
     if uv_break:
         params_refine_text['prompt']+=f'[break_{uv_break}]'
     
-    # if uv_speed:
-    #     params_refine_text['prompt']+=f'[speed_{uv_speed}]'
+    if uv_speed:
+        params_refine_text['prompt']+=f'[speed_{uv_speed}]'
 
     if rand_spk is None:
         rand_spk = chat.sample_random_speaker()
@@ -89,21 +89,26 @@ def run(audio_file,text,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_bre
         'top_K': 20, # top K decode
     }
 
-   
+    
     # ChatTTS使用pynini对中英文进行处理，目前在window上安装报错，需要编译环境,
     # 暂时把do_text_normalization关掉
     wavs = chat.infer(texts, 
                       use_decoder=True,
                       do_text_normalization=False,
                       params_refine_text=params_refine_text,
-                      params_infer_code=params_infer_code)
+                      params_infer_code=params_infer_code,
+                      progress_callback=progress_callback
+                      )
+    
+    wavs = [torch.tensor(wav) for wav in wavs]
+    combined_waveform = torch.cat(wavs, dim=1)
 
-    torchaudio.save(audio_path, torch.from_numpy(wavs[0]), 24000)
+    torchaudio.save(audio_path, combined_waveform, 24000)
 
     return ({
                 "filename": audio_file,
                 "subfolder": "",
                 "type": "output",
-                "prompt":text,
+                "prompt":"".join(texts),
                 "audio_path":audio_path
                 },rand_spk)

@@ -1,5 +1,4 @@
-
-import os
+import os,re
 import sys
 from pathlib import Path
 import torchaudio
@@ -23,6 +22,122 @@ current_directory = os.path.dirname(current_file_path)
 
 # 添加当前插件的nodes路径，使ChatTTS可以被导入使用
 sys.path.append(current_directory)
+
+
+# ref: https://github.com/jianchang512/ChatTTS-ui/blob/main/uilib/utils.py#L159
+# ref: https://github.com/PaddlePaddle/PaddleSpeech/tree/develop/paddlespeech/t2s/frontend/zh_normalization
+from .zh_normalization import TextNormalizer
+
+def get_lang(text):
+    # 定义中文标点符号的模式
+    chinese_punctuation = "[。？！，、；：‘’“”（）《》【】…—\u3000]"
+    # 使用正则表达式替换所有中文标点为""
+    cleaned_text = re.sub(chinese_punctuation, "", text)
+    # 使用正则表达式来匹配中文字符范围
+    return "zh" if re.search('[\u4e00-\u9fff]', cleaned_text) is not None else "en"
+
+# 数字转为英文读法
+def num2text(text):
+    numtext=[' zero ',' one ',' two ',' three ',' four ',' five ',' six ',' seven ',' eight ',' nine ']
+    point=' point '
+    text = re.sub(r'(\d)\,(\d)', r'\1\2', text)
+    text = re.sub(r'(\d+)\s*\+', r'\1 plus ', text)
+    text = re.sub(r'(\d+)\s*\-', r'\1 minus ', text)
+    text = re.sub(r'(\d+)\s*[\*x]', r'\1 times ', text)
+    text = re.sub(r'((?:\d+\.)?\d+)\s*/\s*(\d+)', fraction_to_words, text)
+
+    # 取出数字 number_list= [('1000200030004000.123', '1000200030004000', '123'), ('23425', '23425', '')]
+    number_list=re.findall('((\d+)(?:\.(\d+))?%?)',text)
+    if len(number_list)>0:            
+        #dc= ('1000200030004000.123', '1000200030004000', '123','')
+        for m,dc in enumerate(number_list):
+            if len(dc[1])>16:
+                continue
+            int_text= num_to_english(dc[1])
+            if len(dc)>2 and dc[2]:
+                int_text+=point+"".join([numtext[int(i)] for i in dc[2]])
+            if dc[0][-1]=='%':
+                int_text=f' the pronunciation of  {int_text}'
+            text=text.replace(dc[0],int_text)
+
+        
+    return text.replace('1',' one ').replace('2',' two ').replace('3',' three ').replace('4',' four ').replace('5',' five ').replace('6',' six ').replace('7','seven').replace('8',' eight ').replace('9',' nine ').replace('0',' zero ').replace('=',' equals ')
+
+def fraction_to_words(match):
+    numerator, denominator = match.groups()
+    # 这里只是把数字直接拼接成了英文分数的形式, 实际上应该使用某种方式将数字转换为英文单词
+    # 例如: "1/2" -> "one half", 这里仅为展示目的而直接返回了 "numerator/denominator"
+    return numerator + " over " + denominator
+
+# 切分长行 200 150
+def split_text_by_punctuation(text):
+    # 定义长度限制
+    min_length = 150
+    punctuation_marks = "。？！，、；：”’》」』）】…—"
+    english_punctuation = ".?!,:;)}…"
+    
+    # 结果列表
+    result = []
+    # 起始位置
+    pos = 0
+    
+    # 遍历文本中的每个字符
+    text_length=len(text)
+    for i, char in enumerate(text):
+        if char in punctuation_marks or char in english_punctuation:
+            if  char=='.' and i< text_length-1 and re.match(r'\d',text[i+1]):
+                continue
+            # 当遇到标点时，判断当前分段长度是否超过120
+            if i - pos > min_length:
+                # 如果长度超过120，将当前分段添加到结果列表中
+                result.append(text[pos:i+1])
+                # 更新起始位置到当前标点的下一个字符
+                pos = i+1
+    #print(f'{pos=},{len(text)=}')
+    
+    # 如果剩余文本长度超过120或没有更多标点符号可以进行分割，将剩余的文本作为一个分段添加到结果列表
+    if pos < len(text):
+        result.append(text[pos:])
+    
+    return result
+
+
+# [中英文处理](https://github.com/jianchang512/ChatTTS-ui/blob/main/uilib/utils.py)
+# 中英文数字转换为文字，特殊符号处理
+def split_text(text_list):
+    
+    tx = TextNormalizer()
+    haserror=False
+    result=[]
+    for i,text in enumerate(text_list):
+
+        if get_lang(text)=='zh':
+            tmp="".join(tx.normalize(text))
+        elif haserror:
+            tmp=num2text(text)
+        else:
+            try:
+                # 先尝试使用 nemo_text_processing 处理英文
+                from nemo_text_processing.text_normalization.normalize import Normalizer
+                from functools import partial
+                fun = partial(Normalizer(input_case='cased', lang="en").normalize, verbose=False, punct_post_process=True)
+                tmp=fun(text)
+                # print(f'使用nemo处理英文ok')
+            except Exception as e:
+                # print(f"nemo处理英文失败，改用自定义预处理")
+                # print(e)
+                haserror=True
+                tmp=num2text(text)
+
+        if len(tmp)>200:
+            tmp_res=split_text_by_punctuation(tmp)
+            result=result+tmp_res
+        else:
+            result.append(tmp)
+    print(f'{result=},len={len(result)}')
+    return result
+
+
 
 
 # 需要了解python的class是什么意思
@@ -69,8 +184,10 @@ class ChatTTSNode:
         if random_speaker:
             self.speaker=None
 
+        do_text=split_text([text])
+
         # 使用加载的模块
-        result,rand_spk=module.run(audio_file,text,self.speaker)
+        result,rand_spk=module.run(audio_file,do_text,self.speaker)
 
         self.speaker=rand_spk
         
@@ -124,30 +241,30 @@ def extract_speech(content):
 
 
 
-# # 测试内容
-content = '''
-[laugh][uv_break]Alex：[uv_break] 大家好，欢迎收听我们的播客！今天我们要讨论一个非常有趣的话题：SD3 large在制作产品模型方面的表现。我们有幸邀请到了几位专家，一起来探讨这个话题。首先，请大家自我介绍一下。[uv_break]
-Jordan：[uv_break]大家好，我是Jordan，[uv_break]一名产品设计师。我一直在寻找新技术来提升我们的设计流程，最近对生成式AI特别感兴趣。
-Taylor：[uv_break]大家好，我是Taylor，专注于计算机视觉和机器学习模型的训练和优化。[uv_break]我对SD3 large的技术细节非常感兴趣。[uv_break]
-Morgan：[uv_break]大家好，我是Morgan，一名用户体验设计师。[uv_break]我关注的是技术如何能更好地提升用户体验。
-Alex：[uv_break]太好了，欢迎大家！[uv_break]我们今天的主题是SD3 large在制作产品模型方面的表现。Jordan，你作为产品设计师，能先分享一下你对SD3 large的初步印象吗？
-Jordan：[uv_break]当然。SD3 large在生成产品模型方面表现非常出色，特别是在产品摄影和背景生成上。它能快速生成高质量的模型，大大缩短了我们的设计时间[uv_break]。
-Alex：[uv_break]确实如此。Taylor，你作为计算机视觉工程师，[uv_break]能否给我们讲讲SD3 large的技术优势？[uv_break]
-Taylor：[uv_break]好的。SD3 large使用了最新的生成式AI技术，能够处理大量参数，生成逼真的产品模型。而且，它在背景生成方面也非常强大，可以根据需求自动调整背景，提高了模型的真实感。[uv_break]
-Morgan：[uv_break] 这听起来很棒。我想知道，[uv_break]这些技术如何能提升用户体验？[uv_break]
-Jordan：[uv_break] 这是个好问题。[uv_break]通过使用SD3 large，我们可以更快地推出高质量的产品模型，这不仅提高了设计效率，还能更快地回应用户需求，提升用户满意度。
-Morgan：[uv_break] 没错，快速响应用户需求是提升用户体验的关键。Alex，[uv_break]你作为生成式AI专家，怎么看待SD3 large在设计领域的未来应用？
-Alex：[uv_break]我认为SD3 large在设计领域有非常广阔的应用前景。它不仅能提高设计效率，还能激发设计师的创意。随着技术的不断进步，我们可以期待更多创新的应用场景。[uv_break]特别是虚拟生产和预售产品方面，这些技术可以大大降低成本和时间。
-Taylor：[uv_break] 是的，生成式AI的潜力是巨大的。[uv_break]我们可以利用它来创建更加复杂和逼真的模型，甚至在设计阶段就能进行用户测试，进一步优化产品。对于预售产品，生成式AI可以帮助我们在产品正式发布前就进行市场测试，减少失败风险。
-Jordan：[uv_break]我完全同意。SD3 large不仅是一个工具，更是一个创意的催化剂。希望未来我们能看到更多这样的技术应用于设计领域。虚拟生产也可以让我们在实际生产前就进行各种测试和调整，确保产品的高质量。
-Morgan：[uv_break]另外，虚拟生产还能帮助我们进行可持续设计。通过模拟材料和生产过程，我们可以在设计阶段就考虑环保因素，减少浪费。预售产品的应用也可以让我们更好地了解市场需求，从而做出更符合市场需求的产品。
-Alex：[uv_break]为了让我们的听众更好地理解这些技术，我想补充一些实际案例。例如，一些大品牌已经开始使用生成式AI来创建广告素材，这不仅减少了制作时间，还提高了广告的个性化程度。
-Morgan：[uv_break]对，这些技术还可以用来进行市场调研。[uv_break]通过生成不同风格的产品模型，我们可以更好地了解消费者的偏好，从而做出更符合市场需求的产品。
-Taylor：[uv_break] 另外，生成式AI还能帮助我们进行可持续设计。通过模拟材料和生产过程，我们可以在设计阶段就考虑环保因素，减少浪费。
-Jordan：[uv_break] 这些都是非常有启发性的信息。对于设计师来说，生成式AI不仅是一个工具，[uv_break]更是一个新的创意伙伴，帮助我们突破传统设计的局限。[uv_break]
-Alex：[uv_break]非常感谢大家的精彩讨论！[uv_break]今天的播客就到这里，希望大家对SD3 large在产品模型制作中的应用有了更深入的了解。感谢各位嘉宾的参与，[uv_break]我们下次再见！
-Jordan：[uv_break] 再见！[uv_break]
-'''
+# # # 测试内容
+# content = '''
+# [laugh][uv_break]Alex：[uv_break] 大家好，欢迎收听我们的播客！今天我们要讨论一个非常有趣的话题：SD3 large在制作产品模型方面的表现。我们有幸邀请到了几位专家，一起来探讨这个话题。首先，请大家自我介绍一下。[uv_break]
+# Jordan：[uv_break]大家好，我是Jordan，[uv_break]一名产品设计师。我一直在寻找新技术来提升我们的设计流程，最近对生成式AI特别感兴趣。
+# Taylor：[uv_break]大家好，我是Taylor，专注于计算机视觉和机器学习模型的训练和优化。[uv_break]我对SD3 large的技术细节非常感兴趣。[uv_break]
+# Morgan：[uv_break]大家好，我是Morgan，一名用户体验设计师。[uv_break]我关注的是技术如何能更好地提升用户体验。
+# Alex：[uv_break]太好了，欢迎大家！[uv_break]我们今天的主题是SD3 large在制作产品模型方面的表现。Jordan，你作为产品设计师，能先分享一下你对SD3 large的初步印象吗？
+# Jordan：[uv_break]当然。SD3 large在生成产品模型方面表现非常出色，特别是在产品摄影和背景生成上。它能快速生成高质量的模型，大大缩短了我们的设计时间[uv_break]。
+# Alex：[uv_break]确实如此。Taylor，你作为计算机视觉工程师，[uv_break]能否给我们讲讲SD3 large的技术优势？[uv_break]
+# Taylor：[uv_break]好的。SD3 large使用了最新的生成式AI技术，能够处理大量参数，生成逼真的产品模型。而且，它在背景生成方面也非常强大，可以根据需求自动调整背景，提高了模型的真实感。[uv_break]
+# Morgan：[uv_break] 这听起来很棒。我想知道，[uv_break]这些技术如何能提升用户体验？[uv_break]
+# Jordan：[uv_break] 这是个好问题。[uv_break]通过使用SD3 large，我们可以更快地推出高质量的产品模型，这不仅提高了设计效率，还能更快地回应用户需求，提升用户满意度。
+# Morgan：[uv_break] 没错，快速响应用户需求是提升用户体验的关键。Alex，[uv_break]你作为生成式AI专家，怎么看待SD3 large在设计领域的未来应用？
+# Alex：[uv_break]我认为SD3 large在设计领域有非常广阔的应用前景。它不仅能提高设计效率，还能激发设计师的创意。随着技术的不断进步，我们可以期待更多创新的应用场景。[uv_break]特别是虚拟生产和预售产品方面，这些技术可以大大降低成本和时间。
+# Taylor：[uv_break] 是的，生成式AI的潜力是巨大的。[uv_break]我们可以利用它来创建更加复杂和逼真的模型，甚至在设计阶段就能进行用户测试，进一步优化产品。对于预售产品，生成式AI可以帮助我们在产品正式发布前就进行市场测试，减少失败风险。
+# Jordan：[uv_break]我完全同意。SD3 large不仅是一个工具，更是一个创意的催化剂。希望未来我们能看到更多这样的技术应用于设计领域。虚拟生产也可以让我们在实际生产前就进行各种测试和调整，确保产品的高质量。
+# Morgan：[uv_break]另外，虚拟生产还能帮助我们进行可持续设计。通过模拟材料和生产过程，我们可以在设计阶段就考虑环保因素，减少浪费。预售产品的应用也可以让我们更好地了解市场需求，从而做出更符合市场需求的产品。
+# Alex：[uv_break]为了让我们的听众更好地理解这些技术，我想补充一些实际案例。例如，一些大品牌已经开始使用生成式AI来创建广告素材，这不仅减少了制作时间，还提高了广告的个性化程度。
+# Morgan：[uv_break]对，这些技术还可以用来进行市场调研。[uv_break]通过生成不同风格的产品模型，我们可以更好地了解消费者的偏好，从而做出更符合市场需求的产品。
+# Taylor：[uv_break] 另外，生成式AI还能帮助我们进行可持续设计。通过模拟材料和生产过程，我们可以在设计阶段就考虑环保因素，减少浪费。
+# Jordan：[uv_break] 这些都是非常有启发性的信息。对于设计师来说，生成式AI不仅是一个工具，[uv_break]更是一个新的创意伙伴，帮助我们突破传统设计的局限。[uv_break]
+# Alex：[uv_break]非常感谢大家的精彩讨论！[uv_break]今天的播客就到这里，希望大家对SD3 large在产品模型制作中的应用有了更深入的了解。感谢各位嘉宾的参与，[uv_break]我们下次再见！
+# Jordan：[uv_break] 再见！[uv_break]
+# '''
 
 # # # 调用方法并打印结果
 # speech_list = extract_speech(content)
@@ -304,7 +421,7 @@ class CreateSpeakers:
             spk=self.speaker[name]
 
             result,rand_spk=module.run(audio_file,
-                                       f'Hello 我是{name},你好，欢迎来到mixlab无界社区',
+                                       [f'Hello 我是{name},你好，欢迎来到mixlab无界社区'],
                                        spk,
                                        None,None,None,
                                        3)
@@ -589,13 +706,29 @@ class multiPersonPodcast:
         podcast=[]
         audio_paths=[]
        
-        pbar = comfy.utils.ProgressBar(len(speech_list))
+
+        global pbar
+        pbar = None
+        def my_progress_callback(current_step, total_steps):
+            global pbar
+            if pbar==None:
+                pbar = comfy.utils.ProgressBar(100)
+            progress_percentage = (current_step / total_steps) * 100
+            pbar.update(int(progress_percentage))
+            # print(f"Progress: {progress_percentage:.2f}%")
+
+            if progress_percentage>=100:
+                pbar = None
+
 
         for speech in speech_list:
             audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
             spk=self.speaker[speech['name']]
             print('#speaker',speech['name'],not (spk is None))
-            result,rand_spk=module.run(audio_file,speech['text'],spk,uv_speed,uv_oral,uv_laugh,uv_break)
+
+            do_text=split_text([speech['text']])
+
+            result,rand_spk=module.run(audio_file,do_text,spk,uv_speed,uv_oral,uv_laugh,uv_break,my_progress_callback)
 
             self.speaker[speech['name']]=rand_spk
 
@@ -604,7 +737,7 @@ class multiPersonPodcast:
             podcast.append(result)
 
             audio_paths.append(result['audio_path'])
-            pbar.update(1)
+            # pbar.update(1)
 
         last_result=merge_audio_files(audio_paths)
 
