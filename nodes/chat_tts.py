@@ -714,7 +714,7 @@ class multiPersonPodcast:
         
         def my_progress_callback(current_step, total_steps):
             global pbar 
-            progress_percentage = (current_step / total_steps) * 100
+            progress_percentage = (current_step / total_steps) * 50
             pbar.update(int(progress_percentage))
             # print(f"Progress: {progress_percentage:.2f}%")
 
