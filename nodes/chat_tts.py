@@ -369,8 +369,13 @@ class LoadSpeaker:
 
         self.speaker={}
 
-        for k,v in torch.load(model_path).items():
-            self.speaker[k.lower()]=v
+        tensor=torch.load(model_path)
+
+        if isinstance(tensor, dict):
+            for k,v in tensor.items():
+                self.speaker[k.lower()]=v
+        else:
+            self.speaker['mixlab']=tensor
 
         return {"ui": {"text": self.speaker.keys()}, "result": (self.speaker,)}
 
