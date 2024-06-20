@@ -494,7 +494,7 @@ class LoadSpeaker:
         else:
             self.speaker['mixlab']=tensor
 
-        return {"ui": {"text": self.speaker.keys()}, "result": (self.speaker,)}
+        return {"ui": {"text": list(self.speaker.keys())}, "result": (self.speaker,)}
 
 
 
@@ -578,11 +578,12 @@ class MergeSpeaker:
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
     def chat_tts_run(self,speaker1,speaker2):
+        # print(speaker1,speaker2)
         speaker1.update(speaker2)
 
         self.speaker=speaker1
-
-        return (self.speaker,)
+        
+        return {"ui": {"text": list(self.speaker.keys()),"input":[list(speaker1.keys()),list(speaker2.keys())]}, "result": (self.speaker,)}
     
 class RenameSpeaker:
     def __init__(self):
@@ -611,7 +612,7 @@ class RenameSpeaker:
          
         self.speaker={}
 
-        self.speaker[name.strip()]= list(speaker.values())[0]
+        self.speaker[name.strip().lower()]= list(speaker.values())[0]
 
         return (self.speaker,)
     
@@ -708,18 +709,14 @@ class multiPersonPodcast:
        
 
         global pbar
-        pbar = None
+        sum=len(speech_list)
+        pbar = comfy.utils.ProgressBar(100*sum)
+        
         def my_progress_callback(current_step, total_steps):
-            global pbar
-            if pbar==None:
-                pbar = comfy.utils.ProgressBar(100)
+            global pbar 
             progress_percentage = (current_step / total_steps) * 100
             pbar.update(int(progress_percentage))
             # print(f"Progress: {progress_percentage:.2f}%")
-
-            if progress_percentage>=100:
-                pbar = None
-
 
         for speech in speech_list:
             audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
