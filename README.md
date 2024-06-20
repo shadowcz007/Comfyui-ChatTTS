@@ -12,6 +12,8 @@
 [![alt text](1718816711480.png)](https://www.youtube.com/embed/s6O9aKrr3pM?si=--mwIX1rR0axEQFn)
 
 
+![alt text](1718851026553.png)
+
 
 节点：
 
@@ -31,6 +33,7 @@ SaveSpeaker 、LoadSpeaker : 方便保存和加载音色,支持 [ChatTTS_Speaker
 
 https://huggingface.co/2Noise/ChatTTS
 
+音色pt文件放到```models/chat_tts_speaker```
 
 
 
