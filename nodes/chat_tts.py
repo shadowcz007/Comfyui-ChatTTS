@@ -611,7 +611,7 @@ class RenameSpeaker:
          
         self.speaker={}
 
-        self.speaker[name]= list(speaker.values())[0]
+        self.speaker[name.strip()]= list(speaker.values())[0]
 
         return (self.speaker,)
     
