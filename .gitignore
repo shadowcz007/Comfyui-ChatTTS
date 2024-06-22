@@ -3,3 +3,6 @@ __pycache__
 /nodes/__pycache__
 /nodes/ChatTTS/__pycache__
 *.pyc
+/__pycache__
+/nodes/__pycache__
+/nodes/__pycache__

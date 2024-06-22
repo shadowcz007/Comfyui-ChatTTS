@@ -10,15 +10,8 @@ import comfy.utils
 # 获取当前文件的绝对路径
 current_file_path = os.path.abspath(__file__)
 
-# print('current_file_path',current_file_path)
-
 # 获取当前文件的目录
 current_directory = os.path.dirname(current_file_path)
-
-# print('current_directory',current_directory)
-
-# 加载python模块的目录，确认是否有当前插件的nodes路径
-# print('sys.path',sys.path)
 
 # 添加当前插件的nodes路径，使ChatTTS可以被导入使用
 sys.path.append(current_directory)
@@ -207,9 +200,6 @@ class ChatTTSNode:
         return (result,)
 
 
-import re
-
-
 def remove_brackets(text):
     pattern = re.compile(r'\[.*?\]')
     return re.sub(pattern, '', text)
@@ -362,7 +352,7 @@ class CreateSpeakers:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab/Audio"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
@@ -471,7 +461,7 @@ class LoadSpeaker:
 
     FUNCTION = "run"
 
-    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab/Audio"
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
@@ -522,7 +512,7 @@ class SaveSpeaker:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab/Audio"
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
@@ -571,7 +561,7 @@ class MergeSpeaker:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab/Audio"
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
@@ -602,7 +592,7 @@ class RenameSpeaker:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab/Audio"
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
@@ -675,7 +665,7 @@ class multiPersonPodcast:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab_Test_ChatTTS"
+    CATEGORY = "♾️Mixlab/Audio"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
@@ -740,3 +730,61 @@ class multiPersonPodcast:
 
         return (podcast,last_result,)
     
+
+
+class OpenVoiceClone:
+    def __init__(self):
+        self.speaker = None
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                        "reference_audio":  ("AUDIO", ),
+                        "source_audio":("AUDIO", ), 
+                        }
+                }
+    
+    RETURN_TYPES = ("AUDIO",)
+    RETURN_NAMES = ("audio",)
+
+    FUNCTION = "ov_run"
+
+    CATEGORY = "♾️Mixlab/Audio"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+  
+    def ov_run(self,reference_audio,source_audio):
+        # 传入的文本
+        import importlib
+        # 模块名称
+        module_name = 'openvoice_run'
+
+        # 动态加载模块
+        module = importlib.import_module(module_name)
+
+        
+        output_dir = folder_paths.get_output_directory()
+
+        (full_output_folder,
+            filename,
+            counter,
+            subfolder,
+            _,
+        ) = folder_paths.get_save_image_path("openvoice", output_dir)
+
+        
+        # print('#audio_path',folder_paths, )
+        # 添加文件名后缀
+        audio_file = f"openvoice_{counter:05}.wav"
+        
+        save_path=os.path.join(output_dir, audio_file)
+ 
+        module.run(reference_audio['audio_path'],source_audio['audio_path'],save_path)
+        
+        return ({
+                    "filename": audio_file,
+                    "subfolder": "",
+                    "type": "output",
+                    "audio_path":save_path
+                    },)
+ 
