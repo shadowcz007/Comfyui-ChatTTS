@@ -677,7 +677,10 @@ class multiPersonPodcast:
 
         if speaker!=None:
             # 有传入speaker
-            self.speaker = speaker
+            self.speaker = {}
+            for k,v in speaker.items():
+                self.speaker[k.strip().lower()]=v
+
             for speech in speech_list:
                 if not speech['name'] in self.speaker:
                     self.speaker[speech['name']] = None
