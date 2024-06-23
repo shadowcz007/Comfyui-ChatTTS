@@ -222,7 +222,7 @@ def remove_brackets(text):
 def extract_speech(content):
     # 定义正则表达式来捕获人名和讲话内容，使用非贪婪匹配
     # pattern = re.compile(r'(\w+)：\[uv_break\](.*?)(?=\n|\Z)', re.DOTALL)
-    pattern = re.compile(r'(\w+)(：|:)(.*?)(?=\n|\Z)', re.DOTALL)
+    pattern = re.compile(r'([\w\.\s]+)(：|:)\s*(.*?)(?=\n|\Z)', re.DOTALL)
 
     # 查找所有匹配的内容
     matches = pattern.findall(content)
@@ -242,7 +242,7 @@ def extract_speech(content):
 
 # # # 测试内容
 # content = '''
-# [laugh][uv_break]Alex：[uv_break] 大家好，欢迎收听我们的播客！今天我们要讨论一个非常有趣的话题：SD3 large在制作产品模型方面的表现。我们有幸邀请到了几位专家，一起来探讨这个话题。首先，请大家自我介绍一下。[uv_break]
+# Dr.Ethan：[uv_break] 大家好，欢迎收听我们的播客！今天我们要讨论一个非常有趣的话题：SD3 large在制作产品模型方面的表现。我们有幸邀请到了几位专家，一起来探讨这个话题。首先，请大家自我介绍一下。[uv_break]
 # Jordan：[uv_break]大家好，我是Jordan，[uv_break]一名产品设计师。我一直在寻找新技术来提升我们的设计流程，最近对生成式AI特别感兴趣。
 # Taylor：[uv_break]大家好，我是Taylor，专注于计算机视觉和机器学习模型的训练和优化。[uv_break]我对SD3 large的技术细节非常感兴趣。[uv_break]
 # Morgan：[uv_break]大家好，我是Morgan，一名用户体验设计师。[uv_break]我关注的是技术如何能更好地提升用户体验。
@@ -713,7 +713,8 @@ class multiPersonPodcast:
         for speech in speech_list:
             audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
             spk=self.speaker[speech['name']]
-            print('#speaker',speech['name'],not (spk is None))
+            # print('#speaker',speech['name'],not (spk is None))
+            print('\033[93m#speaker', speech['name'], not (spk is None), '\033[0m')
 
             do_text=split_text([speech['text']])
 
