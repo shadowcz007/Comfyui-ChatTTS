@@ -4,6 +4,7 @@ einops
 vector_quantize_pytorch
 vocos
 pydub
+faster_whisper
 whisper_timestamped
 inflect
 unidecode

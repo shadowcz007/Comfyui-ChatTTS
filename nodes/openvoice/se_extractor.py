@@ -13,12 +13,13 @@ import base64
 import librosa
 from whisper_timestamped.transcribe import get_audio_tensor, get_vad_segments
 
-model_size = "medium"
+
 # Run on GPU with FP16
-model = None
-def split_audio_whisper(audio_path, audio_name, target_dir='processed'):
-    global model
+# model = None
+def split_audio_whisper(audio_path, audio_name, target_dir='processed',model=None):
+    # global model
     if model is None:
+        model_size = "medium"
         model = WhisperModel(model_size, device="cuda", compute_type="float16")
     audio = AudioSegment.from_file(audio_path)
     max_len = len(audio)
@@ -91,7 +92,7 @@ def split_audio_vad(audio_path, audio_name, target_dir, split_seconds=10.0):
     audio = AudioSegment.from_file(audio_path)
 
     for start_time, end_time in segments:
-        audio_active += audio[int( start_time * 1000) : int(end_time * 1000)]
+        audio_active += audio[int(start_time * 1000):int(end_time * 1000)]
     
     audio_dur = audio_active.duration_seconds
     print(f'after vad: dur = {audio_dur}')
@@ -101,7 +102,12 @@ def split_audio_vad(audio_path, audio_name, target_dir, split_seconds=10.0):
     start_time = 0.
     count = 0
     num_splits = int(np.round(audio_dur / split_seconds))
-    assert num_splits > 0, 'input audio is too short'
+
+    if num_splits <= 0:
+        # Adjust split_seconds to the audio duration to ensure at least one segment
+        split_seconds = audio_dur
+        num_splits = 1
+
     interval = audio_dur / num_splits
 
     for i in range(num_splits):
@@ -126,7 +132,7 @@ def hash_numpy_array(audio_path):
     base64_value = base64.b64encode(hash_value)
     return base64_value.decode('utf-8')[:16].replace('/', '_^')
 
-def get_se(audio_path, vc_model, target_dir='processed', vad=True):
+def get_se(audio_path, vc_model, target_dir='processed', whisper_model=None):
     device = vc_model.device
     version = vc_model.version
     print("OpenVoice version:", version)
@@ -140,10 +146,12 @@ def get_se(audio_path, vc_model, target_dir='processed', vad=True):
     # if os.path.isdir(audio_path):
     #     wavs_folder = audio_path
     
+    vad= whisper_model==None
+
     if vad:
         wavs_folder = split_audio_vad(audio_path, target_dir=target_dir, audio_name=audio_name)
     else:
-        wavs_folder = split_audio_whisper(audio_path, target_dir=target_dir, audio_name=audio_name)
+        wavs_folder = split_audio_whisper(audio_path, target_dir=target_dir, audio_name=audio_name,model=whisper_model)
     
     audio_segs = glob(f'{wavs_folder}/*.wav')
     if len(audio_segs) == 0:

@@ -7,6 +7,8 @@ import torch
 import folder_paths
 import comfy.utils
 
+from faster_whisper import WhisperModel
+
 # 获取当前文件的绝对路径
 current_file_path = os.path.abspath(__file__)
 
@@ -20,6 +22,13 @@ sys.path.append(current_directory)
 # ref: https://github.com/jianchang512/ChatTTS-ui/blob/main/uilib/utils.py#L159
 # ref: https://github.com/PaddlePaddle/PaddleSpeech/tree/develop/paddlespeech/t2s/frontend/zh_normalization
 from .zh_normalization import TextNormalizer
+
+def get_model_dir(m):
+    try:
+        return folder_paths.get_folder_paths(m)[0]
+    except:
+        return os.path.join(folder_paths.models_dir, m)
+
 
 def get_lang(text):
     # 定义中文标点符号的模式
@@ -333,10 +342,7 @@ class CreateSpeakers:
         return {"required": {
                         "text":  ("STRING", 
                                      {
-                                       "default":'''小明：大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。大家跟听众打个招呼吧！
-                                       小李：大家好，我是小李，很高兴今天能和大家聊聊最新的AI动态。
-                                       小王：大家好，我是小王，也很期待今天的讨论。
-                                            '''.strip(), 
+                                       "default":'''小明：大家好，欢迎收听本周的《AI新动态》。我是主持人小明，今天我们有两位嘉宾，分别是小李和小王。'''.strip(), 
                                        "multiline": True,
                                        "dynamicPrompts": True # comfyui 动态提示
                                        }
@@ -428,13 +434,6 @@ class CreateSpeakers:
         return (self.last_result ,self.speaker)
 
 
-def get_speaker_model_path():
-    try:
-        return folder_paths.get_folder_paths('chat_tts_speaker')[0]
-    except:
-        return os.path.join(folder_paths.models_dir, "chat_tts_speaker")
-
-
 def get_files_with_extension(directory, extension):
     file_list = []
     for root, dirs, files in os.walk(directory):
@@ -452,7 +451,7 @@ class LoadSpeaker:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
-                        "model":(get_files_with_extension(get_speaker_model_path(),'.pt'),),
+                        "model":(get_files_with_extension(get_model_dir("chat_tts_speaker"),'.pt'),),
                         }
                 }
     
@@ -471,7 +470,7 @@ class LoadSpeaker:
 
         model = model+'.pt'
 
-        model_path=os.path.join(get_speaker_model_path(),model)
+        model_path=os.path.join(get_model_dir("chat_tts_speaker"),model)
 
 
         self.speaker={}
@@ -493,7 +492,7 @@ class SaveSpeaker:
         self.speaker=None
         
         # 模型位置
-        self.model_path=get_speaker_model_path()
+        self.model_path=get_model_dir("chat_tts_speaker")
         if not os.path.exists(self.model_path):
             # 如果目录不存在，则创建它
             os.makedirs(self.model_path)
@@ -732,6 +731,99 @@ class multiPersonPodcast:
     
 
 
+    
+whisper_model=get_model_dir('whisper')
+
+
+
+
+class LoadWhisperModel:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+            "model_size": ([
+                d for d in os.listdir(whisper_model) if os.path.isdir(
+                    os.path.join(whisper_model, d)
+                    ) and os.path.isfile(os.path.join(os.path.join(whisper_model, d), "config.json"))
+                    
+                    ],),
+            "device": (["auto","cpu"],),
+                             },
+                }
+    
+    RETURN_TYPES = ("WHISPER",)
+    RETURN_NAMES = ("whisper_model",)
+
+    FUNCTION = "run"
+
+    CATEGORY = "♾️Mixlab/Audio"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False,)
+    global model
+    model = None
+    def run(self,model_size,device):
+        global model
+
+        if device=="auto":
+            device="cuda" if torch.cuda.is_available() else "cpu"
+
+        # device="cpu"
+        # "cuda" if torch.cuda.is_available() else 
+
+        model = WhisperModel(os.path.join(whisper_model, model_size), device=device)
+        # if model.device=='cuda':
+        #     model.model.to('cpu')
+
+        return (model,)
+    
+
+class WhisperTranscribe:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                                "whisper_model": ("WHISPER",),
+                                "audio": ("AUDIO",),
+                             },
+                }
+    
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text",)
+
+    FUNCTION = "run"
+
+    CATEGORY = "♾️Mixlab/Audio"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False,)
+    
+    def run(self,whisper_model,audio):
+
+        audio_path=audio['audio_path']
+       
+        segments, info = whisper_model.transcribe(audio_path, beam_size=5)
+
+        print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+
+        # Function to format time for SRT
+        def format_time(seconds):
+            millis = int((seconds - int(seconds)) * 1000)
+            hours, remainder = divmod(int(seconds), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return f"{hours:02}:{minutes:02}:{seconds:02},{millis:03}"
+
+        # Prepare SRT content as a string
+        srt_content = ""
+        for i, segment in enumerate(segments):
+            start_time = format_time(segment.start)
+            end_time = format_time(segment.end)
+            srt_content += f"{i + 1}\n"
+            srt_content += f"{start_time} --> {end_time}\n"
+            srt_content += f"{segment.text}\n\n"
+
+        return (srt_content,)
+
+
 class OpenVoiceClone:
     def __init__(self):
         self.speaker = None
@@ -740,7 +832,10 @@ class OpenVoiceClone:
         return {"required": {
                         "reference_audio":  ("AUDIO", ),
                         "source_audio":("AUDIO", ), 
-                        }
+                        },
+                "optional":{
+                    "whisper":("WHISPER",)
+                },
                 }
     
     RETURN_TYPES = ("AUDIO",)
@@ -753,7 +848,7 @@ class OpenVoiceClone:
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
-    def ov_run(self,reference_audio,source_audio):
+    def ov_run(self,reference_audio,source_audio,whisper=None):
         # 传入的文本
         import importlib
         # 模块名称
@@ -779,7 +874,7 @@ class OpenVoiceClone:
         
         save_path=os.path.join(output_dir, audio_file)
  
-        module.run(reference_audio['audio_path'],source_audio['audio_path'],save_path)
+        module.run(reference_audio['audio_path'],source_audio['audio_path'],save_path,whisper)
         
         return ({
                     "filename": audio_file,

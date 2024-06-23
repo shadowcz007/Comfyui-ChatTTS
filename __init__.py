@@ -1,4 +1,4 @@
-from .nodes.chat_tts import ChatTTSNode,multiPersonPodcast,CreateSpeakers,SaveSpeaker,LoadSpeaker,MergeSpeaker,RenameSpeaker,OpenVoiceClone
+from .nodes.chat_tts import ChatTTSNode,multiPersonPodcast,CreateSpeakers,SaveSpeaker,LoadSpeaker,MergeSpeaker,RenameSpeaker,OpenVoiceClone,LoadWhisperModel,WhisperTranscribe
 
 
 NODE_CLASS_MAPPINGS = {
@@ -9,7 +9,9 @@ NODE_CLASS_MAPPINGS = {
     "SaveSpeaker":SaveSpeaker,
     "LoadSpeaker":LoadSpeaker,
     "MergeSpeaker":MergeSpeaker,
-    "RenameSpeaker":RenameSpeaker
+    "RenameSpeaker":RenameSpeaker,
+    "LoadWhisperModel":LoadWhisperModel,
+    "WhisperTranscribe":WhisperTranscribe
 }
 
 # dict = { "key":value }
@@ -22,7 +24,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SaveSpeaker":"Save Speaker",
     "LoadSpeaker":"Load Speaker",
     "MergeSpeaker":"Merge Speaker",
-    "RenameSpeaker":"Rename Speaker"
+    "RenameSpeaker":"Rename Speaker",
+    "LoadWhisperModel":"Load Whisper Model",
+    "WhisperTranscribe":"Whisper Transcribe"
 }
 
 # web ui的节点功能

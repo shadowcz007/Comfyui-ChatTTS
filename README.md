@@ -26,6 +26,9 @@ CreateSpeakers
 SaveSpeaker 、LoadSpeaker : 方便保存和加载音色,支持 [ChatTTS_Speaker/summary](https://modelscope.cn/studios/ttwwwaa/ChatTTS_Speaker/summary) 的音色加载
 
 
+Load Whisper Model、Whisper Transcribe:方便导出音频对应的字幕文件
+
+
 OpenVoiceClone ：方便迁移音色，更好地控制角色声音
 
 ![alt text](03dd6465a900e81a6e1812302efc2b4.png)
@@ -41,6 +44,9 @@ https://huggingface.co/2Noise/ChatTTS
 音色pt文件放到```models/chat_tts_speaker```
 
 [openvoice 模型](https://myshell-public-repo-hosting.s3.amazonaws.com/openvoice/checkpoints_v2_0417.zip)放到```models/open_voice```
+
+
+whisper模型放到```models/whisper/large-v3```
 
 
 
