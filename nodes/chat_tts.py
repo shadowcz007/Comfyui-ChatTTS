@@ -291,8 +291,8 @@ def calculate_tensor_hash(tensor, hash_algorithm='md5'):
     # 返回哈希值的十六进制表示，截取前8个字符
     return hash_func.hexdigest()[:8]
 
-
-def merge_audio_files(file_list):
+# silence_duration 的单位是秒 (seconds)
+def merge_audio_files(file_list, silence_duration=0.5):
     waveforms = []
     sample_rate = None
 
@@ -306,28 +306,33 @@ def merge_audio_files(file_list):
         
         waveforms.append(waveform)
 
-    # 合并音频文件
-    combined_waveform = torch.cat(waveforms, dim=1)
+    # 创建静音间隔
+    silence_samples = int(silence_duration * sample_rate)
+    silence_waveform = torch.zeros(1, silence_samples)
 
-    id=calculate_tensor_hash(combined_waveform)
+    # 合并音频文件并添加静音间隔
+    combined_waveform = waveforms[0]
+    for waveform in waveforms[1:]:
+        combined_waveform = torch.cat((combined_waveform, silence_waveform, waveform), dim=1)
+
+    id = calculate_tensor_hash(combined_waveform)
 
     output_dir = folder_paths.get_output_directory()
     
-    # print('#audio_path',folder_paths, )
     # 添加文件名后缀
     audio_file = f"podcast_{id}.wav"
     
-    audio_path=os.path.join(output_dir, audio_file)
+    audio_path = os.path.join(output_dir, audio_file)
 
     # 保存合并后的音频文件
     torchaudio.save(audio_path, combined_waveform, sample_rate)
     
     return {
-                "filename": audio_file,
-                "subfolder": "",
-                "type": "output",
-                "audio_path":audio_path
-                }
+        "filename": audio_file,
+        "subfolder": "",
+        "type": "output",
+        "audio_path": audio_path
+    }
 
 # # 示例用法
 # file_list = ["audio1.wav", "audio2.wav", "audio3.wav"]
@@ -435,7 +440,7 @@ class CreateSpeakers:
             audio_paths.append(result['audio_path'])
             pbar.update(1)
 
-        self.last_result = merge_audio_files(audio_paths)
+        self.last_result = merge_audio_files(audio_paths,0)
 
         return (self.last_result ,self.speaker)
 
@@ -663,6 +668,14 @@ class multiPersonPodcast:
                          "optional":{ 
                                 "speaker": ("SPEAKER", {"forceInput": True}), 
                                 "skip_refine_text":("BOOLEAN", {"default": False},),
+                                "silence_duration":("FLOAT",{
+                                        "default":0.5, 
+                                        "min": 0, #Minimum value
+                                        "max": 100, #Maximum value
+                                        "step": 0.01, #Slider's step
+                                        "display": "number" # Cosmetic only: display as "number" or "slider"
+                                    }),
+                                
                         }
                 }
     
@@ -676,7 +689,7 @@ class multiPersonPodcast:
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
   
-    def chat_tts_run(self,text,uv_speed,uv_oral,uv_laugh,uv_break,speaker=None,skip_refine_text=False):
+    def chat_tts_run(self,text,uv_speed,uv_oral,uv_laugh,uv_break,speaker=None,skip_refine_text=False,silence_duration=0.5):
         
         speech_list = extract_speech(text)
 
@@ -728,7 +741,7 @@ class multiPersonPodcast:
             audio_paths.append(result['audio_path'])
             pbar.update(1)
 
-        last_result=merge_audio_files(audio_paths)
+        last_result=merge_audio_files(audio_paths,silence_duration )
 
         return (podcast,last_result,)
     
