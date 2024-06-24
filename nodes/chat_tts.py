@@ -721,7 +721,7 @@ class multiPersonPodcast:
        
         sum=len(speech_list)
         pbar = comfy.utils.ProgressBar(sum)
-        
+
         for speech in speech_list:
             audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
             spk=self.speaker[speech['name']]
@@ -742,6 +742,10 @@ class multiPersonPodcast:
             pbar.update(1)
 
         last_result=merge_audio_files(audio_paths,silence_duration )
+
+
+        texts=["".join(split_text([s['text']])) for s in speech_list]
+        last_result["prompt"]="".join(texts)
 
         return (podcast,last_result,)
     
