@@ -42,7 +42,13 @@ def get_new_counter(full_output_folder, filename_prefix):
     return max_number + 1
 
 
-def run(audio_file,texts,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_break=None,progress_callback=None):
+def run(audio_file,texts,
+        rand_spk,
+        uv_speed=None,
+        uv_oral=None,
+        uv_laugh=None,
+        uv_break=None,
+        skip_refine_text=False):
     # 需要运行chat tts 的代码
     
     output_dir = folder_paths.get_output_directory()
@@ -57,7 +63,7 @@ def run(audio_file,texts,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_br
     # from IPython.display import Audio
     # print('#audio_path',audio_path)
     chat = ChatTTS.Chat()
-    chat.load_models(local_path=model_local_path,compile=False) # 设置为True以获得更快速度
+    chat.load_models(source="custom",custom_path=model_local_path,compile=False) # 设置为True以获得更快速度
 
     # texts = [text,]
 
@@ -86,7 +92,7 @@ def run(audio_file,texts,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_br
         'spk_emb': rand_spk, # add sampled speaker 
         'temperature': .3, # using custom temperature
         'top_P': 0.7, # top P decode
-        'top_K': 20, # top K decode
+        'top_K': 20, # top K decode 
     }
 
     
@@ -97,7 +103,8 @@ def run(audio_file,texts,rand_spk,uv_speed=None,uv_oral=None,uv_laugh=None,uv_br
                       do_text_normalization=False,
                       params_refine_text=params_refine_text,
                       params_infer_code=params_infer_code,
-                      progress_callback=progress_callback
+                    #   progress_callback=progress_callback,
+                      skip_refine_text=skip_refine_text,
                       )
     
     wavs = [torch.tensor(wav) for wav in wavs]

@@ -62,8 +62,13 @@ def num2text(text):
                 int_text=f' the pronunciation of  {int_text}'
             text=text.replace(dc[0],int_text)
 
-        
     return text.replace('1',' one ').replace('2',' two ').replace('3',' three ').replace('4',' four ').replace('5',' five ').replace('6',' six ').replace('7','seven').replace('8',' eight ').replace('9',' nine ').replace('0',' zero ').replace('=',' equals ')
+
+
+# 针对[uv_break_3][laugh_3][oral_3][break_4][speed_2] 这些中括号包裹的英文+下横线+数字的组合，不需要替换数字为中文。
+
+
+
 
 def fraction_to_words(match):
     numerator, denominator = match.groups()
@@ -107,12 +112,10 @@ def split_text_by_punctuation(text):
 # [中英文处理](https://github.com/jianchang512/ChatTTS-ui/blob/main/uilib/utils.py)
 # 中英文数字转换为文字，特殊符号处理
 def split_text(text_list):
-    
     tx = TextNormalizer()
     haserror=False
     result=[]
     for i,text in enumerate(text_list):
-
         if get_lang(text)=='zh':
             tmp="".join(tx.normalize(text))
         elif haserror:
@@ -151,12 +154,15 @@ class ChatTTSNode:
         return {"required": {
                         "text":  ("STRING", 
                                      {
-                                       "default": "[laugh][uv_break]大家好，我是shadow [uv_break]", 
+                                       "default": "大家好，我是shadow", 
                                        "multiline": True,
                                        "dynamicPrompts": True # comfyui 动态提示
                                        }
                                     ),
                         "random_speaker":("BOOLEAN", {"default": False},), # 是否需要随机发音人
+                        },
+                "optional":{ 
+                            "skip_refine_text":("BOOLEAN", {"default": False},),
                         }
                 }
     
@@ -170,7 +176,7 @@ class ChatTTSNode:
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
-    def chat_tts_run(self,text,random_speaker):
+    def chat_tts_run(self,text,random_speaker,skip_refine_text=False):
         # 传入的文本
         print(text)
 
@@ -189,7 +195,7 @@ class ChatTTSNode:
         do_text=split_text([text])
 
         # 使用加载的模块
-        result,rand_spk=module.run(audio_file,do_text,self.speaker)
+        result,rand_spk=module.run(audio_file,do_text,self.speaker,skip_refine_text=skip_refine_text)
 
         self.speaker=rand_spk
         
@@ -656,6 +662,7 @@ class multiPersonPodcast:
                         },
                          "optional":{ 
                                 "speaker": ("SPEAKER", {"forceInput": True}), 
+                                "skip_refine_text":("BOOLEAN", {"default": False},),
                         }
                 }
     
@@ -669,11 +676,11 @@ class multiPersonPodcast:
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
   
-    def chat_tts_run(self,text,uv_speed,uv_oral,uv_laugh,uv_break,speaker=None):
+    def chat_tts_run(self,text,uv_speed,uv_oral,uv_laugh,uv_break,speaker=None,skip_refine_text=False):
         
         speech_list = extract_speech(text)
 
-        print(speech_list)
+        # print(speech_list)
 
         if speaker!=None:
             # 有传入speaker
@@ -699,17 +706,9 @@ class multiPersonPodcast:
         podcast=[]
         audio_paths=[]
        
-
-        global pbar
         sum=len(speech_list)
-        pbar = comfy.utils.ProgressBar(100*sum)
+        pbar = comfy.utils.ProgressBar(sum)
         
-        def my_progress_callback(current_step, total_steps):
-            global pbar 
-            progress_percentage = (current_step / total_steps) * 50
-            pbar.update(int(progress_percentage))
-            # print(f"Progress: {progress_percentage:.2f}%")
-
         for speech in speech_list:
             audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
             spk=self.speaker[speech['name']]
@@ -718,7 +717,7 @@ class multiPersonPodcast:
 
             do_text=split_text([speech['text']])
 
-            result,rand_spk=module.run(audio_file,do_text,spk,uv_speed,uv_oral,uv_laugh,uv_break,my_progress_callback)
+            result,rand_spk=module.run(audio_file,do_text,spk,uv_speed,uv_oral,uv_laugh,uv_break,skip_refine_text)
 
             self.speaker[speech['name']]=rand_spk
 
@@ -727,7 +726,7 @@ class multiPersonPodcast:
             podcast.append(result)
 
             audio_paths.append(result['audio_path'])
-            # pbar.update(1)
+            pbar.update(1)
 
         last_result=merge_audio_files(audio_paths)
 

@@ -4,7 +4,7 @@
 > [推荐：mixlab-nodes](https://github.com/shadowcz007/comfyui-mixlab-nodes)
 
 
-目前可以创建音色，复用音色，支持多人对话模式的生成，寻求帮助可以加入[discord](https://discord.gg/cXs9vZSqeK)
+目前可以创建音色，复用音色，支持多人对话模式的生成，寻求帮助可以加入[discord](https://discord.gg/cXs9vZSqeK),注意输入的text不需要加[speed_3][laugh_2]这种手动控制的标签。
 
 
 > 案例 : 多人对话 x 脱口秀

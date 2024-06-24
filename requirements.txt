@@ -10,3 +10,4 @@ inflect
 unidecode
 eng_to_ipa
 jieba
+pybase16384

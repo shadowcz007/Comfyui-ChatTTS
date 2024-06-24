@@ -2,7 +2,10 @@
 import torch
 import torch.nn.functional as F
 from transformers.generation import TopKLogitsWarper, TopPLogitsWarper
-from ..utils.infer_utils import CustomRepetitionPenaltyLogitsProcessorRepeat
+
+from ..utils.infer import CustomRepetitionPenaltyLogitsProcessorRepeat
+from ..utils.io import del_all
+from ..model.gpt import GPT
 
 def infer_code(
     models,
@@ -13,39 +16,40 @@ def infer_code(
     temperature = 0.3, 
     repetition_penalty = 1.05,
     max_new_token = 2048,
+    stream=False,
+    device="cpu",
     **kwargs
 ):
-    
-    device = next(models['gpt'].parameters()).device
-    
+
+    gpt: GPT = models['gpt']
+
     if not isinstance(text, list): 
         text = [text]
         
     if not isinstance(temperature, list):
-        temperature = [temperature] * models['gpt'].num_vq
+        temperature = [temperature] * gpt.num_vq
     
     if spk_emb is not None:
         text = [f'[Stts][spk_emb]{i}[Ptts]' for i in text] 
     else:
         text = [f'[Stts][empty_spk]{i}[Ptts]' for i in text]
     
-    text_token = models['tokenizer'](text, return_tensors='pt', add_special_tokens=False, padding=True).to(device)
-    input_ids = text_token['input_ids'][...,None].expand(-1, -1, models['gpt'].num_vq)
-    text_mask = torch.ones(text_token['input_ids'].shape, dtype=bool, device=device)
-    
-    inputs = {
-        'input_ids': input_ids,
-        'text_mask': text_mask,
-        'attention_mask': text_token['attention_mask'],
-    }
+    text_token_tmp = models['tokenizer'](text, return_tensors='pt', add_special_tokens=False, padding=True)
+    text_token = text_token_tmp.to(device)
+    del text_token_tmp
+    input_ids = text_token['input_ids'][...,None].expand(-1, -1, gpt.num_vq).to(gpt.device_gpt)
+    text_mask = torch.ones(text_token['input_ids'].shape, dtype=bool, device=gpt.device_gpt)
 
-    emb = models['gpt'].get_emb(**inputs)
+    emb = gpt(input_ids, text_mask)
+    del text_mask
+
     if spk_emb is not None:
-        emb[inputs['input_ids'][..., 0] == models['tokenizer'].convert_tokens_to_ids('[spk_emb]')] = \
-            F.normalize(spk_emb.to(device).to(emb.dtype)[None].expand(len(text), -1), p=2.0, dim=1, eps=1e-12)  
-    
-    num_code = models['gpt'].emb_code[0].num_embeddings - 1
-    
+        n = F.normalize(spk_emb.to(emb.dtype)[None].expand(len(text), -1), p=2.0, dim=1, eps=1e-12).to(gpt.device_gpt)
+        emb[input_ids[..., 0] == models['tokenizer'].convert_tokens_to_ids('[spk_emb]')] = n
+        del n
+
+    num_code = int(gpt.emb_code[0].num_embeddings - 1)
+
     LogitsWarpers = []
     if top_P is not None:
         LogitsWarpers.append(TopPLogitsWarper(top_P, min_tokens_to_keep=3))
@@ -57,18 +61,24 @@ def infer_code(
         LogitsProcessors.append(CustomRepetitionPenaltyLogitsProcessorRepeat(\
             repetition_penalty, num_code, 16))
     
-    result = models['gpt'].generate(
-        emb, inputs['input_ids'], 
+    result = gpt.generate(
+        emb, input_ids, 
         temperature = torch.tensor(temperature, device=device), 
-        attention_mask = inputs['attention_mask'],
+        attention_mask = text_token['attention_mask'],
         LogitsWarpers = LogitsWarpers,
         LogitsProcessors = LogitsProcessors,
         eos_token = num_code, 
         max_new_token = max_new_token, 
         infer_text = False,
+        stream = stream,
         **kwargs
     )
-    
+
+    del_all(text_token)
+    del emb, text_token, input_ids
+    del_all(LogitsWarpers)
+    del_all(LogitsProcessors)
+
     return result
 
 
@@ -81,11 +91,12 @@ def refine_text(
     repetition_penalty = 1.0,
     max_new_token = 384,
     prompt = '',
+    device="cpu",
     **kwargs
 ):
-    
-    device = next(models['gpt'].parameters()).device
-    
+
+    gpt: GPT = models['gpt']
+
     if not isinstance(text, list): 
         text = [text]
     
@@ -95,11 +106,7 @@ def refine_text(
     text_token = models['tokenizer'](text, return_tensors='pt', add_special_tokens=False, padding=True).to(device)
     text_mask = torch.ones(text_token['input_ids'].shape, dtype=bool, device=device)
 
-    inputs = {
-        'input_ids': text_token['input_ids'][...,None].expand(-1, -1, models['gpt'].num_vq),
-        'text_mask': text_mask,
-        'attention_mask': text_token['attention_mask'],
-    }
+    input_ids = text_token['input_ids'][...,None].expand(-1, -1, gpt.num_vq)
     
     LogitsWarpers = []
     if top_P is not None:
@@ -110,16 +117,26 @@ def refine_text(
     LogitsProcessors = []
     if repetition_penalty is not None and repetition_penalty != 1:
         LogitsProcessors.append(CustomRepetitionPenaltyLogitsProcessorRepeat(repetition_penalty, len(models['tokenizer']), 16))
-    
-    result = models['gpt'].generate(
-        models['gpt'].get_emb(**inputs), inputs['input_ids'], 
+
+    emb = gpt(input_ids,text_mask)
+    del text_mask
+
+    result = gpt.generate(
+        emb, input_ids, 
         temperature = torch.tensor([temperature,], device=device), 
-        attention_mask = inputs['attention_mask'],
+        attention_mask = text_token['attention_mask'],
         LogitsWarpers = LogitsWarpers,
         LogitsProcessors = LogitsProcessors,
         eos_token = torch.tensor(models['tokenizer'].convert_tokens_to_ids('[Ebreak]'), device=device)[None], 
         max_new_token = max_new_token, 
         infer_text = True,
+        stream = False,
         **kwargs
     )
-    return result
+
+    del_all(text_token)
+    del emb, text_token, input_ids
+    del_all(LogitsWarpers)
+    del_all(LogitsProcessors)
+
+    return next(result)
