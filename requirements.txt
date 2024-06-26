@@ -9,5 +9,6 @@ whisper_timestamped
 inflect
 unidecode
 eng_to_ipa
+cn2an
 jieba
 pybase16384
