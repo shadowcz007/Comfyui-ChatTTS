@@ -46,8 +46,9 @@ https://huggingface.co/2Noise/ChatTTS
 [openvoice 模型](https://myshell-public-repo-hosting.s3.amazonaws.com/openvoice/checkpoints_v2_0417.zip)放到```models/open_voice```
 
 
-whisper模型放到```models/whisper/large-v3```
+[whisper模型](https://github.com/SYSTRAN/faster-whisper/tree/master)放到```models/whisper/large-v3```
 
+![alt text](1719392506548.jpg)
 
 
 > 分支是一个课程的示例代码:以ChatTTS为例，为ComfyUI增加语音合成功能。一个自定义的节点需要完成：
