@@ -56,3 +56,17 @@ python 运行时（后端）- 后端python怎么写
 GUI - 怎么修改节点界面
 
 
+
+### 相关插件推荐
+
+[comfyui-liveportrait](https://github.com/shadowcz007/comfyui-liveportrait)
+
+[Comfyui-ChatTTS](https://github.com/shadowcz007/Comfyui-ChatTTS)
+
+[comfyui-sound-lab](https://github.com/shadowcz007/comfyui-sound-lab)
+
+[comfyui-Image-reward](https://github.com/shadowcz007/comfyui-Image-reward)
+
+[comfyui-ultralytics-yolo](https://github.com/shadowcz007/comfyui-ultralytics-yolo)
+
+[comfyui-moondream](https://github.com/shadowcz007/comfyui-moondream)
