@@ -19,6 +19,7 @@ from transformers.modeling_outputs import BaseModelOutputWithPast
 from ..utils.infer import CustomRepetitionPenaltyLogitsProcessorRepeat
 from ..utils.io import del_all
 
+import comfy.utils
 
 """class LlamaMLP(nn.Module):
     def __init__(self, hidden_size, intermediate_size):
@@ -288,6 +289,8 @@ class GPT(nn.Module):
                 desc="text" if infer_text else "code",
                 bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}(max) [{elapsed}, {rate_fmt}{postfix}]',
             ) as pbar:
+                
+                pbar2 = comfy.utils.ProgressBar(max_new_token)
 
                 past_key_values = None
 
@@ -410,6 +413,7 @@ class GPT(nn.Module):
                     if finish.all(): break
 
                     pbar.update(1)
+                    pbar2.update(1)
 
             if not finish.all():
                 self.logger.warn(f'Incomplete result. hit max_new_token: {max_new_token}')

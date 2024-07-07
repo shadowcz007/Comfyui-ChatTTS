@@ -171,14 +171,14 @@ class ChatTTSNode:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
     def chat_tts_run(self,text,random_speaker,skip_refine_text=False):
         # 传入的文本
-        print(text)
+        # print(text)
 
         audio_file="chat_tts"
 
@@ -369,7 +369,7 @@ class CreateSpeakers:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
@@ -471,7 +471,7 @@ class LoadSpeaker:
 
     FUNCTION = "run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
@@ -522,7 +522,7 @@ class SaveSpeaker:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
@@ -571,7 +571,7 @@ class MergeSpeaker:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
@@ -602,7 +602,7 @@ class RenameSpeaker:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
@@ -684,7 +684,7 @@ class multiPersonPodcast:
 
     FUNCTION = "chat_tts_run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
@@ -776,7 +776,7 @@ class LoadWhisperModel:
 
     FUNCTION = "run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/Whisper"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,)
@@ -812,7 +812,7 @@ class WhisperTranscribe:
 
     FUNCTION = "run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/Whisper"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,)
@@ -863,7 +863,7 @@ class OpenVoiceClone:
 
     FUNCTION = "ov_run"
 
-    CATEGORY = "♾️Mixlab/Audio"
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
