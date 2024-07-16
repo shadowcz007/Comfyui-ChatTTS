@@ -1,4 +1,4 @@
-from .nodes.chat_tts import ChatTTSNode,multiPersonPodcast,CreateSpeakers,SaveSpeaker,LoadSpeaker,MergeSpeaker,RenameSpeaker,OpenVoiceClone,LoadWhisperModel,WhisperTranscribe
+from .nodes.chat_tts import ChatTTSNode,multiPersonPodcast,CreateSpeakers,SaveSpeaker,LoadSpeaker,MergeSpeaker,RenameSpeaker,OpenVoiceClone,LoadWhisperModel,WhisperTranscribe,OpenVoiceCloneBySpeaker
 
 
 NODE_CLASS_MAPPINGS = {
@@ -6,6 +6,7 @@ NODE_CLASS_MAPPINGS = {
     "CreateSpeakers":CreateSpeakers,
     "MultiPersonPodcast":multiPersonPodcast,
     "OpenVoiceClone":OpenVoiceClone,
+    "OpenVoiceCloneBySpeaker":OpenVoiceCloneBySpeaker,
     "SaveSpeaker":SaveSpeaker,
     "LoadSpeaker":LoadSpeaker,
     "MergeSpeaker":MergeSpeaker,
@@ -20,7 +21,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ChatTTS_": "ChatTTS",
     "MultiPersonPodcast":"Multi Person Podcast",
     "CreateSpeakers":"Create Speakers",
-    "OpenVoiceClone":"Open Voice Clone",
+    "OpenVoiceClone":"OpenVoice Clone",
+    "OpenVoiceCloneBySpeaker":"OpenVoice Clone By Speaker",
     "SaveSpeaker":"Save Speaker",
     "LoadSpeaker":"Load Speaker",
     "MergeSpeaker":"Merge Speaker",

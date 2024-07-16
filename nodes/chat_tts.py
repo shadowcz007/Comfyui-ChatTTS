@@ -161,9 +161,9 @@ class ChatTTSNode:
                                     ),
                         "random_speaker":("BOOLEAN", {"default": False},), # 是否需要随机发音人
                         },
-                "optional":{ 
-                            "skip_refine_text":("BOOLEAN", {"default": False},),
-                        }
+                        "optional":{ 
+                                    "skip_refine_text":("BOOLEAN", {"default": False},),
+                                }
                 }
     
     RETURN_TYPES = ("AUDIO",)
@@ -384,7 +384,7 @@ class CreateSpeakers:
         
         speech_list = extract_speech(text)
 
-        print('seed',seed,speech_list)
+        # print('seed',seed,speech_list)
 
         is_new=False
 
@@ -590,7 +590,9 @@ class MergeSpeaker:
         self.speaker=speaker1
         
         return {"ui": {"text": list(self.speaker.keys()),"input":[list(speaker1.keys()),list(speaker2.keys())]}, "result": (self.speaker,)}
-    
+
+
+
 class RenameSpeaker:
     def __init__(self):
         self.speaker=None
@@ -943,4 +945,112 @@ class OpenVoiceClone:
             "sample_rate": sample_rate}
         
         return (audio,)
- 
+
+
+
+
+class OpenVoiceCloneBySpeaker:
+    def __init__(self):
+        self.speaker=None
+       
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { 
+                         "audio_list":("AUDIO",),
+                         "speaker": ("SPEAKER", {"forceInput": True}),
+                         "speaker_name":("STRING", {"multiline": False,"default": "mixlab"}),
+                         "silence_duration":("FLOAT",{
+                                        "default":0.5, 
+                                        "min": 0, #Minimum value
+                                        "max": 100, #Maximum value
+                                        "step": 0.01, #Slider's step
+                                        "display": "number" # Cosmetic only: display as "number" or "slider"
+                                    })
+                        },
+                 "optional":{
+                    "whisper":("WHISPER",),
+                     
+                },
+                }
+    
+    RETURN_TYPES = ("AUDIO","AUDIO",)
+    RETURN_NAMES = ("audio_list","audio",)
+
+    FUNCTION = "chat_tts_run"
+
+    CATEGORY = "♾️Mixlab/Audio/ChatTTS"
+
+    INPUT_IS_LIST = False
+    OUTPUT_NODE = True
+    OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+  
+    def chat_tts_run(self,audio_list,speaker,speaker_name,silence_duration=0.5,whisper=None):
+        name=speaker_name.strip().lower()
+        print(name,speaker,silence_duration,audio_list,whisper)
+        
+
+        # 音色
+        spk=speaker[name]
+
+        # 创建声音文件
+        import importlib
+        # 模块名称
+        module_name = 'chat_tts_run'
+
+        # 动态加载模块
+        module = importlib.import_module(module_name)
+
+        audio_file="chat_tts_"+name+"_"
+
+        reference_audio,rand_spk=module.run(audio_file,
+                                            [f'Hello 我是{name},你好，欢迎来到mixlab无界社区'],
+                                            spk,
+                                            None,None,None,3)
+
+        
+        # 动态加载模块
+        openvoice_run = importlib.import_module('openvoice_run')
+
+        output_dir = folder_paths.get_output_directory()
+
+        def clone_voice(source_audio):
+            (full_output_folder,
+                filename,
+                counter,
+                subfolder,
+                _,
+            ) = folder_paths.get_save_image_path("openvoice", output_dir)
+
+            # 添加文件名后缀
+            audio_file = f"openvoice_clone_voice_{counter:05}.wav"
+            save_path=os.path.join(output_dir, audio_file)
+    
+            openvoice_run.run(reference_audio['audio_path'],source_audio['audio_path'],save_path,whisper)
+            waveform, sample_rate = torchaudio.load(save_path)
+            audio = {
+                "filename": audio_file,
+                "subfolder": "",
+                "type": "output",
+                "audio_path":save_path,
+                "waveform": waveform.unsqueeze(0), 
+                "sample_rate": sample_rate}
+            
+            return audio
+        
+        audio_paths=[]
+        for index in range(len(audio_list)):
+            audio=audio_list[index]
+            if audio['name']==name:
+                audio_list[index]=clone_voice(audio['audio_path'])
+            audio_paths.append(audio_list[index]['audio_path'])
+
+        last_result = merge_audio_files(audio_paths,silence_duration)
+
+        waveform, sample_rate = torchaudio.load(last_result["audio_path"])
+
+        return (audio_list,{
+            **last_result,
+            "waveform": waveform.unsqueeze(0), 
+            "sample_rate": sample_rate
+        },)
+    
