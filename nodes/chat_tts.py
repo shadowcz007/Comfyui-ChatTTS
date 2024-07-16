@@ -298,22 +298,20 @@ def calculate_tensor_hash(tensor, hash_algorithm='md5'):
     return hash_func.hexdigest()[:8]
 
 # silence_duration 的单位是秒 (seconds)
-def merge_audio_files(file_list, silence_duration=0.5):
+def merge_audio_files(file_list, silence_duration=0.5, target_sample_rate=24000):
     waveforms = []
-    sample_rate = None
 
-    # 加载所有音频文件
+    # 加载所有音频文件并调整采样率
     for file_path in file_list:
         waveform, current_sample_rate = torchaudio.load(file_path)
-        if sample_rate is None:
-            sample_rate = current_sample_rate
-        else:
-            assert sample_rate == current_sample_rate, "采样率不一致"
+        if current_sample_rate != target_sample_rate:
+            resample_transform = torchaudio.transforms.Resample(orig_freq=current_sample_rate, new_freq=target_sample_rate)
+            waveform = resample_transform(waveform)
         
         waveforms.append(waveform)
 
     # 创建静音间隔
-    silence_samples = int(silence_duration * sample_rate)
+    silence_samples = int(silence_duration * target_sample_rate)
     silence_waveform = torch.zeros(1, silence_samples)
 
     # 合并音频文件并添加静音间隔
@@ -331,7 +329,7 @@ def merge_audio_files(file_list, silence_duration=0.5):
     audio_path = os.path.join(output_dir, audio_file)
 
     # 保存合并后的音频文件
-    torchaudio.save(audio_path, combined_waveform, sample_rate)
+    torchaudio.save(audio_path, combined_waveform, target_sample_rate)
     
     return {
         "filename": audio_file,
