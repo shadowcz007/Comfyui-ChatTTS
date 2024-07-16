@@ -982,7 +982,7 @@ class OpenVoiceCloneBySpeaker:
 
     INPUT_IS_LIST = False
     OUTPUT_NODE = True
-    OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
+    OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
   
     def chat_tts_run(self,audio_list,speaker,speaker_name,silence_duration=0.5,whisper=None):
         name=speaker_name.strip().lower()
