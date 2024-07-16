@@ -12,7 +12,7 @@ import hashlib
 import base64
 import librosa
 from whisper_timestamped.transcribe import get_audio_tensor, get_vad_segments
-
+import shutil
 
 # Run on GPU with FP16
 # model = None
@@ -154,6 +154,9 @@ def get_se(audio_path, vc_model, target_dir='processed', whisper_model=None):
         wavs_folder = split_audio_whisper(audio_path, target_dir=target_dir, audio_name=audio_name,model=whisper_model)
     
     audio_segs = glob(f'{wavs_folder}/*.wav')
+    if len(audio_segs) == 0 and os.path.exists(audio_path) and audio_path.lower().endswith('.wav'):
+        audio_segs = [audio_path]
+
     if len(audio_segs) == 0:
         raise NotImplementedError('No audio segments found!')
     

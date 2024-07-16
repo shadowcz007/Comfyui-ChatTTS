@@ -9,10 +9,10 @@
 
 > 案例 : 多人对话 x 脱口秀
 
-[![alt text](1718816711480.png)](https://www.youtube.com/embed/s6O9aKrr3pM?si=--mwIX1rR0axEQFn)
+[![alt text](assets/1718816711480.png)](https://www.youtube.com/embed/s6O9aKrr3pM?si=--mwIX1rR0axEQFn)
 
 
-![alt text](1718851026553.png)
+![alt text](assets/1718851026553.png)
 
 
 节点：
@@ -31,7 +31,7 @@ Load Whisper Model、Whisper Transcribe:方便导出音频对应的字幕文件
 
 OpenVoiceClone ：方便迁移音色，更好地控制角色声音
 
-![alt text](03dd6465a900e81a6e1812302efc2b4.png)
+![alt text](assets/03dd6465a900e81a6e1812302efc2b4.png)
 
 
 
@@ -48,7 +48,7 @@ https://huggingface.co/2Noise/ChatTTS
 
 [whisper模型](https://github.com/SYSTRAN/faster-whisper/tree/master)放到```models/whisper/large-v3```
 
-![alt text](1719392506548.jpg)
+![alt text](assets/1719392506548.jpg)
 
 
 > 分支是一个课程的示例代码:以ChatTTS为例，为ComfyUI增加语音合成功能。一个自定义的节点需要完成：

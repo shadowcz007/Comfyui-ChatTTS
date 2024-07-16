@@ -1,5 +1,5 @@
 import os,re
-import sys
+import sys,time
 from pathlib import Path
 import torchaudio
 import hashlib
@@ -212,7 +212,13 @@ class ChatTTSNode:
 
         # torchaudio.save(audio_file, torch.from_numpy(wavs[0]), 24000)
 
-        return (result,)
+        waveform, sample_rate = torchaudio.load(result["audio_path"])
+
+        return ({
+            **result,
+            "waveform": waveform.unsqueeze(0), 
+            "sample_rate": sample_rate
+        },)
 
 
 def remove_brackets(text):
@@ -736,7 +742,13 @@ class multiPersonPodcast:
 
             result={**speech, **result}
 
-            podcast.append(result)
+            waveform, sample_rate = torchaudio.load(result["audio_path"])
+
+            podcast.append({
+                **result,
+                "waveform": waveform.unsqueeze(0), 
+                "sample_rate": sample_rate
+                })
 
             audio_paths.append(result['audio_path'])
             pbar.update(1)
@@ -747,7 +759,14 @@ class multiPersonPodcast:
         texts=["".join(split_text([s['text']])) for s in speech_list]
         last_result["prompt"]="".join(texts)
 
-        return (podcast,last_result,)
+
+        waveform, sample_rate = torchaudio.load(last_result["audio_path"])
+
+        return (podcast,{
+            **last_result,
+            "waveform": waveform.unsqueeze(0), 
+            "sample_rate": sample_rate
+        },)
     
 
 
@@ -869,6 +888,24 @@ class OpenVoiceClone:
     OUTPUT_IS_LIST = (False,) #list 列表 [1,2,3]
   
     def ov_run(self,reference_audio,source_audio,whisper=None):
+
+        # 判断是否是 Tensor 类型
+        is_dict =  isinstance(reference_audio, dict)
+        # print('#判断是否是 Tensor 类型',is_tensor,audio)
+        if is_dict and 'waveform' in reference_audio and 'sample_rate' in reference_audio:
+            audio_path=os.path.join(folder_paths.get_temp_directory(),"reference_audio_"+str(int(time.time()))+'.wav')
+            torchaudio.save(audio_path, reference_audio['waveform'].squeeze(0), reference_audio["sample_rate"])
+            reference_audio["audio_path"]=audio_path
+
+        # 判断是否是 Tensor 类型
+        is_dict =  isinstance(source_audio, dict)
+        # print('#判断是否是 Tensor 类型',is_tensor,audio)
+        if is_dict and 'waveform' in source_audio and 'sample_rate' in source_audio:
+            audio_path=os.path.join(folder_paths.get_temp_directory(),"source_audio_"+str(int(time.time()))+'.wav')
+            torchaudio.save(audio_path, source_audio['waveform'].squeeze(0), source_audio["sample_rate"])
+            source_audio["audio_path"]=audio_path
+
+
         # 传入的文本
         import importlib
         # 模块名称
@@ -895,11 +932,15 @@ class OpenVoiceClone:
         save_path=os.path.join(output_dir, audio_file)
  
         module.run(reference_audio['audio_path'],source_audio['audio_path'],save_path,whisper)
+
+        waveform, sample_rate = torchaudio.load(save_path)
+        audio = {
+            "filename": audio_file,
+            "subfolder": "",
+            "type": "output",
+            "audio_path":save_path,
+            "waveform": waveform.unsqueeze(0), 
+            "sample_rate": sample_rate}
         
-        return ({
-                    "filename": audio_file,
-                    "subfolder": "",
-                    "type": "output",
-                    "audio_path":save_path
-                    },)
+        return (audio,)
  
