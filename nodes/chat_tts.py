@@ -1025,7 +1025,7 @@ class OpenVoiceCloneBySpeaker:
             audio_file = f"openvoice_clone_voice_{counter:05}.wav"
             save_path=os.path.join(output_dir, audio_file)
     
-            openvoice_run.run(reference_audio['audio_path'],source_audio['audio_path'],save_path,whisper)
+            openvoice_run.run(reference_audio['audio_path'],source_audio,save_path,whisper)
             waveform, sample_rate = torchaudio.load(save_path)
             audio = {
                 "filename": audio_file,
