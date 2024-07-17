@@ -1025,8 +1025,11 @@ class OpenVoiceCloneBySpeaker:
         elif reference_audio and not "audio_path" in reference_audio and 'waveform' in reference_audio and 'sample_rate' in reference_audio:
             # {'waveform': tensor([], size=(1, 1, 0)), 'sample_rate': 44100}
             # 保存
+            output_dir = folder_paths.get_temp_directory()
             filename_prefix = "reference_audio_"
-            full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, self.output_dir)
+            full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
+                filename_prefix,
+                output_dir)
             
             filename_with_batch_num = filename.replace("%batch_num%", str(1))
             file = f"{filename_with_batch_num}_{counter:05}_.wav"
