@@ -1022,6 +1022,18 @@ class OpenVoiceCloneBySpeaker:
                                                 [f'Hello 我是{name},你好，欢迎来到mixlab无界社区'],
                                                 spk,
                                                 None,None,None,3)
+        elif reference_audio and not "audio_path" in reference_audio and 'waveform' in reference_audio and 'sample_rate' in reference_audio:
+            # {'waveform': tensor([], size=(1, 1, 0)), 'sample_rate': 44100}
+            # 保存
+            filename_prefix = "reference_audio_"
+            full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, self.output_dir)
+            
+            filename_with_batch_num = filename.replace("%batch_num%", str(1))
+            file = f"{filename_with_batch_num}_{counter:05}_.wav"
+            reference_audio['audio_path']=os.path.join(full_output_folder, file)
+
+            torchaudio.save(reference_audio['audio_path'], audio['waveform'].squeeze(0), audio["sample_rate"])
+
         
         # 动态加载模块
         openvoice_run = importlib.import_module('openvoice_run')
