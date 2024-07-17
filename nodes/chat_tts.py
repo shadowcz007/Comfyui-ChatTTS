@@ -955,8 +955,9 @@ class OpenVoiceCloneBySpeaker:
     def INPUT_TYPES(s):
         return {"required": { 
                          "audio_list":("AUDIO",),
-                         "speaker": ("SPEAKER", {"forceInput": True}),
-                         "speaker_name":("STRING", {"multiline": False,"default": "mixlab"}),
+                         "reference_speaker": ("SPEAKER", {"forceInput": True}),
+                         "reference_speaker_name":("STRING", {"multiline": False,"default": "mixlab"}),#参考reference_speaker里的哪个角色的音色
+                         "source_speaker_name":("STRING", {"multiline": False,"default": "opus"}),#audio_list 里的哪个角色需要更换音色
                          "silence_duration":("FLOAT",{
                                         "default":0.5, 
                                         "min": 0, #Minimum value
@@ -982,13 +983,13 @@ class OpenVoiceCloneBySpeaker:
     OUTPUT_NODE = True
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
   
-    def chat_tts_run(self,audio_list,speaker,speaker_name,silence_duration=0.5,whisper=None):
-        name=speaker_name.strip().lower()
-        print(name,speaker,silence_duration,audio_list,whisper)
-        
+    def chat_tts_run(self,audio_list,reference_speaker,reference_speaker_name,source_speaker_name,silence_duration=0.5,whisper=None):
+        name=reference_speaker_name.strip().lower()
+        # print(name,speaker,silence_duration,audio_list,whisper)
+        s_name=source_speaker_name.strip().lower()
 
         # 音色
-        spk=speaker[name]
+        spk=reference_speaker[name]
 
         # 创建声音文件
         import importlib
@@ -1038,7 +1039,9 @@ class OpenVoiceCloneBySpeaker:
         audio_paths=[]
         for index in range(len(audio_list)):
             audio=audio_list[index]
-            if audio['name']==name:
+            #目标角色更换音色
+            a_name=audio['name'].strip().lower()
+            if a_name==s_name:
                 audio_list[index]=clone_voice(audio['audio_path'])
             audio_paths.append(audio_list[index]['audio_path'])
 
