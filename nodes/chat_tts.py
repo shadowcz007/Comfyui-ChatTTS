@@ -1035,7 +1035,7 @@ class OpenVoiceCloneBySpeaker:
             file = f"{filename_with_batch_num}_{counter:05}_.wav"
             reference_audio['audio_path']=os.path.join(full_output_folder, file)
 
-            torchaudio.save(reference_audio['audio_path'], audio['waveform'].squeeze(0), audio["sample_rate"])
+            torchaudio.save(reference_audio['audio_path'], reference_audio['waveform'].squeeze(0), reference_audio["sample_rate"])
 
         
         # 动态加载模块
