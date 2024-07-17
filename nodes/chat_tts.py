@@ -1001,6 +1001,7 @@ class OpenVoiceCloneBySpeaker:
         # print(name,speaker,silence_duration,audio_list,whisper)
         s_name=source_speaker_name.strip().lower()
 
+        import importlib
 
         if reference_speaker:
             name=reference_speaker_name.strip().lower()
@@ -1008,7 +1009,7 @@ class OpenVoiceCloneBySpeaker:
             spk=reference_speaker[name]
 
             # 创建声音文件
-            import importlib
+            
             # 模块名称
             module_name = 'chat_tts_run'
 
