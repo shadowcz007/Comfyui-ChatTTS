@@ -732,7 +732,7 @@ class multiPersonPodcast:
             audio_file="chat_tts_"+speech['name']+"_"+str(speech['index'])+"_"
             spk=self.speaker[speech['name']]
             # print('#speaker',speech['name'],not (spk is None))
-            print('\033[93m#speaker', speech['name'], not (spk is None), '\033[0m')
+            print('\033[93m 使用#speaker', speech['name'], not (spk is None), '\033[0m')
 
             do_text=split_text([speech['text']])
 
@@ -955,19 +955,24 @@ class OpenVoiceCloneBySpeaker:
     def INPUT_TYPES(s):
         return {"required": { 
                          "audio_list":("AUDIO",),
-                         "reference_speaker": ("SPEAKER", {"forceInput": True}),
-                         "reference_speaker_name":("STRING", {"multiline": False,"default": "mixlab"}),#参考reference_speaker里的哪个角色的音色
                          "source_speaker_name":("STRING", {"multiline": False,"default": "opus"}),#audio_list 里的哪个角色需要更换音色
-                         "silence_duration":("FLOAT",{
+                        
+                        },
+                 "optional":{
+                      "reference_speaker": ("SPEAKER", {"forceInput": True}),
+                      "reference_speaker_name":("STRING", {"multiline": False,"default": "mixlab"}),#参考reference_speaker里的哪个角色的音色
+                    
+                      "reference_audio": ("AUDIO",),
+
+                      "silence_duration":("FLOAT",{
                                         "default":0.5, 
                                         "min": 0, #Minimum value
                                         "max": 100, #Maximum value
                                         "step": 0.01, #Slider's step
                                         "display": "number" # Cosmetic only: display as "number" or "slider"
-                                    })
-                        },
-                 "optional":{
-                    "whisper":("WHISPER",),
+                                    }),
+
+                      "whisper":("WHISPER",),
                      
                 },
                 }
@@ -983,29 +988,39 @@ class OpenVoiceCloneBySpeaker:
     OUTPUT_NODE = True
     OUTPUT_IS_LIST = (False,False,) #list 列表 [1,2,3]
   
-    def chat_tts_run(self,audio_list,reference_speaker,reference_speaker_name,source_speaker_name,silence_duration=0.5,whisper=None):
-        name=reference_speaker_name.strip().lower()
+    def chat_tts_run(self,
+                     audio_list,
+                     source_speaker_name,
+                     reference_speaker=None,
+                     reference_speaker_name="mixlab",
+                     reference_audio=None,
+                     silence_duration=0.5,
+                     whisper=None):
+        
+        
         # print(name,speaker,silence_duration,audio_list,whisper)
         s_name=source_speaker_name.strip().lower()
 
-        # 音色
-        spk=reference_speaker[name]
 
-        # 创建声音文件
-        import importlib
-        # 模块名称
-        module_name = 'chat_tts_run'
+        if reference_speaker:
+            name=reference_speaker_name.strip().lower()
+            # 音色
+            spk=reference_speaker[name]
 
-        # 动态加载模块
-        module = importlib.import_module(module_name)
+            # 创建声音文件
+            import importlib
+            # 模块名称
+            module_name = 'chat_tts_run'
 
-        audio_file="chat_tts_"+name+"_"
+            # 动态加载模块
+            module = importlib.import_module(module_name)
 
-        reference_audio,rand_spk=module.run(audio_file,
-                                            [f'Hello 我是{name},你好，欢迎来到mixlab无界社区'],
-                                            spk,
-                                            None,None,None,3)
+            audio_file="chat_tts_"+name+"_"
 
+            reference_audio,rand_spk=module.run(audio_file,
+                                                [f'Hello 我是{name},你好，欢迎来到mixlab无界社区'],
+                                                spk,
+                                                None,None,None,3)
         
         # 动态加载模块
         openvoice_run = importlib.import_module('openvoice_run')
@@ -1054,4 +1069,3 @@ class OpenVoiceCloneBySpeaker:
             "waveform": waveform.unsqueeze(0), 
             "sample_rate": sample_rate
         },)
-    
