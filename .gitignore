@@ -7,3 +7,4 @@ __pycache__
 /nodes/__pycache__
 /nodes/__pycache__
 /nodes/__pycache__
+*.pyc
