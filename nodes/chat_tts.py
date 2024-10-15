@@ -29,6 +29,10 @@ def get_model_dir(m):
     except:
         return os.path.join(folder_paths.models_dir, m)
 
+def remove_multiple_asterisks(input_string):
+    # 使用正则表达式将连续两个或更多的星号替换为空字符串
+    result = re.sub(r'\*{2,}', '', input_string)
+    return result
 
 def get_lang(text):
     # 定义中文标点符号的模式
@@ -191,6 +195,8 @@ class ChatTTSNode:
         
         if random_speaker:
             self.speaker=None
+
+        text=remove_multiple_asterisks(text)
 
         do_text=split_text([text])
 
@@ -696,6 +702,8 @@ class multiPersonPodcast:
   
     def chat_tts_run(self,text,uv_speed,uv_oral,uv_laugh,uv_break,speaker=None,skip_refine_text=False,silence_duration=0.5):
         
+        text=remove_multiple_asterisks(text)
+
         speech_list = extract_speech(text)
 
         # print(speech_list)
